@@ -1,21 +1,15 @@
 import { useRouter } from 'vue-router'
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import { apiClient } from '../api' // Your previously defined Axios instance
 
 export const useEmployeeStore = defineStore('employee', () => {
-  // 1. State (reactive variables)
   const router = useRouter()
   const profile = ref()
   const loading = ref(false)
   const error = ref()
   const success = ref()
 
-  // 2. Getters (computed values)
-  const isLoggedIn = computed(() => profile.value !== null)
-  const userRole = computed(() => profile.value?.role || 'guest')
-
-  // 3. Actions (functions that change state or handle async API operations)
   async function login(params: any) {
     loading.value = true
     error.value = null
@@ -33,7 +27,8 @@ export const useEmployeeStore = defineStore('employee', () => {
       const employee = data.data.employee
       const token = data.data.token
 
-      profile.value = { employee, token }
+      profile.value = employee
+      sessionStorage.setItem('authToken', token)
 
       success.value = {
         success: true,
@@ -44,6 +39,7 @@ export const useEmployeeStore = defineStore('employee', () => {
 
       return
     } catch (err) {
+      console.error(err)
       error.value = {
         success: false,
         message: err,
@@ -57,7 +53,7 @@ export const useEmployeeStore = defineStore('employee', () => {
     }
   }
 
-  async function register(params) {
+  async function register(params: any) {
     loading.value = true
     error.value = null
     success.value = null
@@ -96,20 +92,45 @@ export const useEmployeeStore = defineStore('employee', () => {
     }
   }
 
-  function clearProfile() {
-    profile.value = null
+  async function me() {
+    try {
+      const response = await apiClient.get('/auth/me')
+
+      const data = response.data
+
+      if (data.success) {
+        profile.value = data.data
+      }
+
+      return
+    } catch (err) {
+      console.error(err)
+      profile.value = null
+      sessionStorage.removeItem('authToken')
+      router.push('/login')
+    }
   }
 
-  // Return everything you want the components to access
+  async function logout() {
+    try {
+      await apiClient.get('/auth/logout')
+    } catch (err) {
+      console.error(err)
+    } finally {
+      profile.value = null
+      sessionStorage.removeItem('authToken')
+      router.push('/login')
+    }
+  }
+
   return {
     profile,
     loading,
     error,
     success,
-    isLoggedIn,
     login,
+    logout,
     register,
-    userRole,
-    clearProfile,
+    me,
   }
 })

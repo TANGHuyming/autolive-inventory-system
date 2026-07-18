@@ -75,14 +75,14 @@ watch(isLogin, () => {
   <div class="min-h-screen grid grid-cols-1 lg:grid-cols-2">
     <Alert
       v-if="success"
-      class="flex items-center justify-center fixed bottom-0 right-0 w-full bg-background/50 border border-background font-bold text-2xl text-background"
+      class="flex items-center justify-center fixed bottom-0 right-0 w-full bg-background/50 border border-background font-bold text-xl text-background"
     >
       <AlertCircleIcon />
       <AlertTitle>{{ success.message }}</AlertTitle>
     </Alert>
     <Alert
       v-else-if="error"
-      class="flex items-center justify-center fixed bottom-0 right-0 w-full bg-destructive/50 border border-destructive font-bold text-2xl text-destructive"
+      class="flex items-center justify-center fixed bottom-0 right-0 w-full bg-destructive/50 border border-destructive font-bold text-xl text-destructive"
     >
       <AlertCircleIcon />
       <AlertTitle>{{ error.message }}</AlertTitle>

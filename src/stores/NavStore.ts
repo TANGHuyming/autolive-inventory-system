@@ -10,7 +10,6 @@ export const useNavStore = defineStore('nav', () => {
     { value: '/employees', label: 'Employees' },
     { value: '/items', label: 'Items' },
     { value: '/transactions', label: 'Transactions' },
-    { value: '/logout', label: 'Logout' },
   ])
   const navTitle = computed(() => route.name)
 

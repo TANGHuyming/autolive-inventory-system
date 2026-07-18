@@ -13,14 +13,18 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { Button } from '@/components/ui/button'
 import { Toggle } from '@/components/ui/toggle'
 import { RouterLink } from 'vue-router'
 import { useNavStore } from '@/stores/NavStore'
 import { storeToRefs } from 'pinia'
+import { useEmployeeStore } from '@/stores/EmployeeStore'
 
 const navStore = useNavStore()
+const employeeStore = useEmployeeStore()
 const { navItem, navOptions, navTitle } = storeToRefs(navStore)
 const { setNavItem } = navStore
+const { logout } = employeeStore
 const isLight = ref(localStorage.getItem('theme') === 'dark' ? false : true)
 
 function toggleDark() {
@@ -88,6 +92,22 @@ function toggleDark() {
                 {{ opt.label }}
               </RouterLink>
             </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
+      <!-- Profile -->
+      <div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="default" class="cursor-pointer">Profile</Button>
+          </DropdownMenuTrigger>
+
+          <DropdownMenuContent>
+            <Button variant="outline" class="w-full cursor-pointer">Profile</Button>
+            <Button @click="logout" variant="destructive" class="w-full cursor-pointer"
+              >Logout</Button
+            >
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
