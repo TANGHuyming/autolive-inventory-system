@@ -1,12 +1,10 @@
 <script setup>
 import {
   Field,
-  FieldContent,
   FieldDescription,
   FieldError,
   FieldGroup,
   FieldLabel,
-  FieldSeparator,
   FieldSet,
   FieldTitle,
 } from '@/components/ui/field'
@@ -15,6 +13,8 @@ import { Alert, AlertTitle } from '@/components/ui/alert'
 import { storeToRefs } from 'pinia'
 import { ref, watch } from 'vue'
 import { useEmployeeStore } from '@/stores/EmployeeStore'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 
 const employeeStore = useEmployeeStore()
 const { success, error, loading } = storeToRefs(employeeStore)
@@ -73,213 +73,189 @@ watch(isLogin, () => {
 
 <template>
   <div class="min-h-screen grid grid-cols-1 lg:grid-cols-2">
-    <v-expand-transition>
-      <Alert
-        v-if="success"
-        class="flex items-center justify-center fixed bottom-0 right-0 max-w-100 bg-green-200 border border-green-500 font-bold text-2xl text-green-500"
-      >
-        <AlertCircleIcon />
-        <AlertTitle>{{ success.message }}</AlertTitle>
-      </Alert>
-      <Alert
-        v-else-if="error"
-        class="flex items-center justify-center fixed bottom-0 right-0 max-w-100 bg-red-200 border border-red-500 font-bold text-2xl text-red-500"
-      >
-        <AlertCircleIcon />
-        <AlertTitle>{{ error.message }}</AlertTitle>
-      </Alert>
-    </v-expand-transition>
+    <Alert
+      v-if="success"
+      class="flex items-center justify-center fixed bottom-0 right-0 w-full bg-background/50 border border-background font-bold text-2xl text-background"
+    >
+      <AlertCircleIcon />
+      <AlertTitle>{{ success.message }}</AlertTitle>
+    </Alert>
+    <Alert
+      v-else-if="error"
+      class="flex items-center justify-center fixed bottom-0 right-0 w-full bg-destructive/50 border border-destructive font-bold text-2xl text-destructive"
+    >
+      <AlertCircleIcon />
+      <AlertTitle>{{ error.message }}</AlertTitle>
+    </Alert>
 
     <div
-      class="bg-green-500 lg:flex flex-col justify-center items-center p-16 text-center gap-y-2 hidden"
+      class="bg-sidebar lg:flex flex-col justify-center items-center p-16 text-center gap-y-2 hidden"
     >
       <img
         src="../../public/frontGate.png"
         alt="picture of autolive entrance"
         class="w-90 h-90 rounded-full"
       />
-      <h2 class="text-5xl text-white font-bold">Autolive Inventory Management System</h2>
-      <p class="text-2xl text-green-100 font-bold">
+      <h2 class="text-5xl text-sidebar-foreground font-bold">
+        Autolive Inventory Management System
+      </h2>
+      <p class="text-2xl text-sidebar-primary font-bold">
         Genuine spareparts and vehicle repairing service
       </p>
     </div>
 
-    <form @submit="handleLogin" class="flex flex-col justify-center items-center" v-if="isLogin">
-      <FieldSet
-        class="flex justify-center items-center p-8 bg-green-100 w-[90%] border-2 border-green-500 rounded-md shadow-gray-200 shadow-lg"
-      >
-        <FieldTitle class="text-4xl font-bold text-green-500">Login</FieldTitle>
-        <FieldDescription class="text-2xl font-semibold"
+    <form
+      @submit="handleLogin"
+      class="bg-background flex flex-col justify-center items-center"
+      v-if="isLogin"
+    >
+      <FieldSet>
+        <FieldTitle class="text-xl">Login</FieldTitle>
+        <FieldDescription class="text-lg"
           >Enter your employee credentials to login</FieldDescription
         >
 
-        <FieldGroup class="flex flex-col gap-y-2">
-          <Field class="grid grid-cols-1 lg:grid-cols-[20%_1fr]">
-            <FieldLabel for="email" class="text-lg font-medium">Email</FieldLabel>
-            <input
+        <FieldGroup>
+          <Field>
+            <FieldLabel for="email">Email</FieldLabel>
+            <Input
               id="email"
               type="email"
               required
               placeholder="Enter your email..."
-              class="px-4 py-2 text-left bg-white border border-green-500 text-lg rounded-md"
               v-model="email"
               @input:v-model="(e) => (email = e.target.value)"
             />
           </Field>
 
-          <Field class="grid grid-cols-1 lg:grid-cols-[20%_1fr]">
-            <FieldLabel for="password" class="text-lg font-medium">Password</FieldLabel>
-            <input
+          <Field>
+            <FieldLabel for="password">Password</FieldLabel>
+            <Input
               id="password"
               type="password"
               required
               placeholder="Enter your password..."
-              class="px-4 py-2 text-left bg-white border border-green-500 text-lg rounded-md"
               v-model="password"
               @input:v-model="(e) => (password = e.target.value)"
             />
           </Field>
 
           <Field class="mt-8">
-            <button
+            <Button
+              variant="default"
               type="submit"
-              class="rounded-lg bg-green-500 hover:bg-green-400 text-center px-4 py-2 cursor-pointer"
+              class="cursor-pointer"
               :class="{
                 'opacity-50': loading,
               }"
               :disabled="loading"
             >
               {{ loading ? 'Logging in...' : 'Log in' }}
-            </button>
-            <button
-              @click="isLogin = false"
-              type="button"
-              class="rounded-lg bg-white hover:bg-green-500 border border-green-500 text-center px-4 py-2 cursor-pointer"
-            >
+            </Button>
+            <Button class="cursor-pointer" variant="outline" @click="isLogin = false" type="button">
               Register
-            </button>
+            </Button>
           </Field>
         </FieldGroup>
       </FieldSet>
     </form>
 
     <form @submit="handleRegister" class="flex flex-col justify-center items-center" v-else>
-      <FieldSet
-        class="flex justify-center items-center p-8 bg-green-100 w-[90%] border-2 border-green-500 rounded-md shadow-gray-200 shadow-lg"
-      >
-        <FieldTitle class="text-4xl font-bold text-green-500">Register</FieldTitle>
-        <FieldDescription class="text-2xl font-semibold"
-          >Sign up as an employee of Auto Live</FieldDescription
-        >
+      <FieldSet>
+        <FieldTitle class="text-xl">Register</FieldTitle>
+        <FieldDescription class="text-lg">Sign up as an employee of Auto Live</FieldDescription>
 
-        <FieldGroup class="flex flex-col gap-y-2">
-          <Field class="grid grid-cols-1 lg:grid-cols-[20%_1fr]">
-            <FieldLabel for="first_name" class="text-lg font-medium">First name</FieldLabel>
-            <input
+        <FieldGroup>
+          <Field>
+            <FieldLabel for="first_name">First name</FieldLabel>
+            <Input
               id="firstName"
               type="text"
               required
               placeholder="Enter your first name..."
-              class="px-4 py-2 text-left bg-white border border-green-500 text-lg rounded-md"
               v-model="firstName"
               @input:v-model="(e) => (firstName = e.target.value)"
             />
           </Field>
 
-          <Field class="grid grid-cols-1 lg:grid-cols-[20%_1fr]">
-            <FieldLabel for="lastName" class="text-lg font-medium">Last name</FieldLabel>
-            <input
+          <Field>
+            <FieldLabel for="lastName">Last name</FieldLabel>
+            <Input
               id="lastName"
               type="text"
               required
               placeholder="Enter your last name..."
-              class="px-4 py-2 text-left bg-white border border-green-500 text-lg rounded-md"
               v-model="lastName"
               @input:v-model="(e) => (lastName = e.target.value)"
             />
           </Field>
 
-          <Field class="grid grid-cols-1 lg:grid-cols-[20%_1fr]">
-            <FieldLabel for="telephone" class="text-lg font-medium">Telephone</FieldLabel>
-            <input
+          <Field>
+            <FieldLabel for="telephone">Telephone</FieldLabel>
+            <Input
               id="telephone"
               type="tel"
               required
               placeholder="Enter your phone number..."
-              class="px-4 py-2 text-left bg-white border border-green-500 text-lg rounded-md"
               v-model="telephone"
               @input:v-model="(e) => (telephone = e.target.value)"
             />
           </Field>
 
-          <Field class="grid grid-cols-1 lg:grid-cols-[20%_1fr]">
-            <FieldLabel for="email" class="text-lg font-medium">Email</FieldLabel>
-            <input
+          <Field>
+            <FieldLabel for="email">Email</FieldLabel>
+            <Input
               id="email"
               type="email"
               required
               placeholder="Enter your email..."
-              class="px-4 py-2 text-left bg-white border border-green-500 text-lg rounded-md"
               v-model="email"
               @input:v-model="(e) => (email = e.target.value)"
             />
           </Field>
 
-          <Field class="grid grid-cols-1 lg:grid-cols-[20%_1fr]">
-            <FieldLabel for="password" class="text-lg font-medium">Password</FieldLabel>
-            <input
+          <Field>
+            <FieldLabel for="password">Password</FieldLabel>
+            <Input
               id="password"
               type="password"
               required
               placeholder="Enter your password..."
-              class="px-4 py-2 text-left bg-white border border-green-500 text-lg rounded-md"
               v-model="password"
               @input:v-model="(e) => (password = e.target.value)"
             />
           </Field>
 
-          <Field class="grid grid-cols-1 lg:grid-cols-[20%_1fr]">
-            <FieldLabel for="confirmPassword" class="text-lg font-medium"
-              >Confirm password</FieldLabel
-            >
-            <input
+          <Field>
+            <FieldLabel for="confirmPassword">Confirm password</FieldLabel>
+            <Input
               id="confirmPassword"
               type="password"
               required
               placeholder="Confirm your password..."
-              class="px-4 py-2 text-left bg-white border border-green-500 text-lg rounded-md"
               v-model="confirmingPassword"
               @input:v-model="(e) => (confirmingPassword = e.target.value)"
             />
-            <FieldError
-              class="text-red-500 col-span-full text-center"
-              :class="{
-                hidden: !confirmingPassword || !password,
-                'text-green-500': confirmingPassword === password,
-              }"
-            >
-              {{ confirmingPassword === password ? 'Passwords matched' : 'Passwords do not match' }}
+            <FieldError>
+              {{ confirmingPassword !== password ? 'Passwords do not match' : '' }}
             </FieldError>
           </Field>
 
-          <Field class="mt-8">
-            <button
+          <Field>
+            <Button
+              variant="default"
               type="submit"
-              class="rounded-lg bg-green-500 hover:bg-green-400 text-center px-4 py-2 cursor-pointer"
+              class="cursor-pointer"
               :class="{
                 'opacity-50': loading,
               }"
               :disabled="loading"
             >
               {{ loading ? 'Registering...' : 'Register' }}
-            </button>
-            <button
-              @click="isLogin = true"
-              type="button"
-              class="rounded-lg bg-white hover:bg-green-500 border border-green-500 text-center px-4 py-2 cursor-pointer"
-            >
+            </Button>
+            <Button class="cursor-pointer" variant="outline" @click="isLogin = true" type="button">
               Back
-            </button>
+            </Button>
           </Field>
         </FieldGroup>
       </FieldSet>
