@@ -2,19 +2,19 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { apiClient } from '@/api'
 
-export const useInventoryStore = defineStore('inventory', () => {
-  const items = ref([])
+export const useTransactionStore = defineStore('transaction', () => {
+  const transactions = ref([])
   const error = ref()
   const loading = ref(false)
   const success = ref()
 
-  const fetchItems = async (params: any) => {
+  const fetchTransactions = async (params: any) => {
     loading.value = true
     error.value = null
     success.value = null
 
     try {
-      const response = await apiClient.get('/inventories', {
+      const response = await apiClient.get('/transactions', {
         params: params,
       })
       const data = response.data
@@ -24,7 +24,7 @@ export const useInventoryStore = defineStore('inventory', () => {
           message: 'Items fetched successfully',
         }
 
-        items.value = data.data
+        transactions.value = data.data
       }
 
       return
@@ -44,10 +44,10 @@ export const useInventoryStore = defineStore('inventory', () => {
   }
 
   return {
-    items,
+    transactions,
     error,
     success,
     loading,
-    fetchItems,
+    fetchTransactions,
   }
 })

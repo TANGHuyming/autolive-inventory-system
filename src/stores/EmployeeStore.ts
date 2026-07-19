@@ -5,7 +5,8 @@ import { apiClient } from '../api' // Your previously defined Axios instance
 
 export const useEmployeeStore = defineStore('employee', () => {
   const router = useRouter()
-  const profile = ref()
+  const profile = ref(null)
+  const employees = ref([])
   const loading = ref(false)
   const error = ref()
   const success = ref()
@@ -24,10 +25,9 @@ export const useEmployeeStore = defineStore('employee', () => {
         throw new Error(data.data || data.message)
       }
 
-      const employee = data.data.employee
       const token = data.data.token
+      profile.value = data.data.employee
 
-      profile.value = employee
       sessionStorage.setItem('authToken', token)
 
       success.value = {
@@ -93,6 +93,10 @@ export const useEmployeeStore = defineStore('employee', () => {
   }
 
   async function me() {
+    if (profile.value !== null) {
+      return profile.value
+    }
+
     try {
       const response = await apiClient.get('/auth/me')
 
@@ -100,6 +104,7 @@ export const useEmployeeStore = defineStore('employee', () => {
 
       if (data.success) {
         profile.value = data.data
+        return data.data
       }
 
       return
@@ -107,7 +112,6 @@ export const useEmployeeStore = defineStore('employee', () => {
       console.error(err)
       profile.value = null
       sessionStorage.removeItem('authToken')
-      router.push('/login')
     }
   }
 
@@ -123,14 +127,49 @@ export const useEmployeeStore = defineStore('employee', () => {
     }
   }
 
+  async function fetchEmployees(params: any) {
+    loading.value = true
+    try {
+      const response = await apiClient.get('/employees', {
+        params: params,
+      })
+
+      const data = response.data
+
+      if (data.success) {
+        success.value = {
+          success: true,
+          message: 'Items fetched successfully',
+        }
+        employees.value = data.data
+      }
+
+      return
+    } catch (err) {
+      console.error(err)
+      error.value = {
+        success: false,
+        message: err,
+      }
+    } finally {
+      loading.value = false
+      setTimeout(() => {
+        error.value = null
+        success.value = null
+      }, 3000)
+    }
+  }
+
   return {
     profile,
+    employees,
     loading,
     error,
     success,
     login,
     logout,
     register,
+    fetchEmployees,
     me,
   }
 })

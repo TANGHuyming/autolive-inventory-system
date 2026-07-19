@@ -1,3 +1,4 @@
+import { useEmployeeStore } from '@/stores/EmployeeStore'
 import { createRouter, createWebHistory } from 'vue-router'
 
 const router = createRouter({
@@ -17,30 +18,74 @@ const router = createRouter({
           name: 'Home',
           component: () => import('@/views/HomeView.vue'),
         },
+        {
+          path: '/employees',
+          name: 'Employees',
+          component: () => import('@/views/EmployeeView.vue'),
+          meta: {
+            permission: 'admin.super_admin',
+          },
+        },
+        {
+          path: '/items',
+          name: 'Items',
+          component: () => import('@/views/ItemView.vue'),
+        },
+        {
+          path: '/transactions',
+          name: 'Transactions',
+          component: () => import('@/views/TransactionView.vue'),
+          meta: {
+            permission: 'admin.super_admin',
+          },
+        },
+        {
+          path: '/access-denied',
+          name: 'Access Denied',
+          component: () => import('@/views/AccessDeniedView.vue'),
+        },
       ],
       meta: {
         requiresAuth: true,
       },
     },
     {
-      path: '/login',
-      name: 'Login',
-      component: () => import('@/views/LoginView.vue'),
+      path: '/',
+      children: [
+        {
+          path: '/login',
+          component: () => import('@/views/LoginView.vue'),
+        },
+      ],
       meta: {
-        layout: false,
+        public: true,
       },
     },
   ],
 })
 
-router.beforeEach((to) => {
+router.beforeEach(async (to) => {
   const authToken = sessionStorage.getItem('authToken') || null
+  const employeeStore = useEmployeeStore()
+
+  if (to.meta.public) {
+    return
+  }
+
+  // Me acts as a check auth too
+  await employeeStore.me()
 
   if (to.meta.requiresAuth && !authToken) {
     return '/login'
-  } else {
-    return
   }
+
+  if (to.meta.permission) {
+    const permissions = to.meta.permission.split('.')
+    if (!employeeStore.profile || !permissions.includes(employeeStore.profile.role.role_name)) {
+      return '/access-denied'
+    }
+  }
+  return
 })
 
 export default router
