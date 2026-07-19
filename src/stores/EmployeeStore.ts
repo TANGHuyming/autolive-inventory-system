@@ -2,9 +2,11 @@ import { useRouter } from 'vue-router'
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { apiClient } from '../api' // Your previously defined Axios instance
+import { useNavStore } from './NavStore'
 
 export const useEmployeeStore = defineStore('employee', () => {
   const router = useRouter()
+  const { resetNavItem } = useNavStore()
   const profile = ref(null)
   const employees = ref([])
   const loading = ref(false)
@@ -35,7 +37,7 @@ export const useEmployeeStore = defineStore('employee', () => {
         message: 'Login successful!',
       }
 
-      router.push('/dashboard')
+      router.push('/')
 
       return
     } catch (err) {
@@ -123,6 +125,7 @@ export const useEmployeeStore = defineStore('employee', () => {
     } finally {
       profile.value = null
       sessionStorage.removeItem('authToken')
+      resetNavItem()
       router.push('/login')
     }
   }

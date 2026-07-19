@@ -13,16 +13,24 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb'
 import { Button } from '@/components/ui/button'
 import { Toggle } from '@/components/ui/toggle'
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRouter } from 'vue-router'
 import { useNavStore } from '@/stores/NavStore'
 import { storeToRefs } from 'pinia'
 import { useEmployeeStore } from '@/stores/EmployeeStore'
 
 const navStore = useNavStore()
 const employeeStore = useEmployeeStore()
-const { navItem, navOptions, navTitle } = storeToRefs(navStore)
+const router = useRouter()
+const { navItem, navOptions, navTitles } = storeToRefs(navStore)
 const { setNavItem } = navStore
 const { profile } = storeToRefs(employeeStore)
 const { logout } = employeeStore
@@ -40,7 +48,7 @@ function isPermitted(value) {
   }
 
   const permissions = value.split('.')
-  if (!permissions.includes(profile.value.role.role_name)) {
+  if (profile.value && !permissions.includes(profile.value.role.role_name)) {
     return false
   }
 
@@ -49,18 +57,32 @@ function isPermitted(value) {
 </script>
 
 <template>
-  <header class="fixed top-0 w-full z-10 backdrop-blur-2xl">
+  <header class="sticky top-0 w-full z-10 backdrop-blur-2xl">
     <div class="flex flex-row justify-between items-center max-w-7xl mx-auto rounded-lg px-4 py-2">
       <div class="flex flex-row gap-5 items-center">
         <div class="bg-background w-16 h-16 rounded-full border-2 border-primary overflow-hidden">
           <img
             src="../../../public/logo.png"
             alt="Image of autolive logo"
-            class="object-contain w-full h-full"
+            class="object-contain w-full h-full cursor-pointer"
+            @click="() => router.push('/')"
           />
         </div>
 
-        <h1 class="text-xl lg:text-2xl font-bold">{{ navTitle }}</h1>
+        <!-- <h1 class="text-xl lg:text-2xl font-bold">{{ navTitles }}</h1> -->
+        <Breadcrumb>
+          <BreadcrumbList class="list-none flex flex-row">
+            <BreadcrumbItem v-for="(navTitle, index) in navTitles" :key="navTitle">
+              <BreadcrumbLink asChild class="flex flex-row items-center text-2xl font-bold">
+                <RouterLink :to="navTitle.value" class="mx-2">{{ navTitle.label }}</RouterLink>
+                <BreadcrumbSeparator
+                  v-if="index !== navTitles.length - 1"
+                  class="mx-2"
+                ></BreadcrumbSeparator>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
       </div>
 
       <nav class="flex flex-row items-center gap-5">
@@ -76,9 +98,10 @@ function isPermitted(value) {
             <NavigationMenuList>
               <NavigationMenuItem v-for="opt in navOptions" :key="opt.value" :value="opt.value">
                 <NavigationMenuLink
+                  asChild
                   v-if="isPermitted(opt.permission)"
                   :active="opt.value === navItem"
-                  @click="() => setNavItem(opt.value)"
+                  @click="setNavItem(opt.value)"
                 >
                   <RouterLink :to="opt.value" class="font-bold text-md">{{ opt.label }}</RouterLink>
                 </NavigationMenuLink>

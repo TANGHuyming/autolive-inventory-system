@@ -30,14 +30,19 @@ const router = createRouter({
           path: '/items',
           name: 'Items',
           component: () => import('@/views/ItemView.vue'),
+          meta: {
+            breadcrumb: 'Items',
+          },
+        },
+        {
+          path: '/items/:itemId',
+          name: 'Item Detail',
+          component: () => import('@/views/ItemDetailView.vue'),
         },
         {
           path: '/transactions',
           name: 'Transactions',
           component: () => import('@/views/TransactionView.vue'),
-          meta: {
-            permission: 'admin.super_admin',
-          },
         },
         {
           path: '/access-denied',

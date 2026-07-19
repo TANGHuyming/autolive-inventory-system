@@ -10,17 +10,29 @@ export const useNavStore = defineStore('nav', () => {
     { value: '/items', label: 'Items' },
     { value: '/transactions', label: 'Transactions', permission: 'admin.super_admin' },
   ])
-  const navItem = ref(navOptions.value.find((opt) => opt.label === route.name)?.value)
-  const navTitle = computed(() => route.name)
+  const navItem = ref(navOptions.value.find((opt) => opt.label === route.name)?.value || '/')
+  const navTitles = computed(() => {
+    return route.matched.map((r) => {
+      return {
+        value: r.path,
+        label: r.name,
+      }
+    })
+  })
 
   const setNavItem = (value: string) => {
     navItem.value = value
   }
 
+  const resetNavItem = () => {
+    navItem.value = '/'
+  }
+
   return {
     navItem,
     navOptions,
-    navTitle,
+    navTitles,
     setNavItem,
+    resetNavItem,
   }
 })
