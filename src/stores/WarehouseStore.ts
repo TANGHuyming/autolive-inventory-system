@@ -1,31 +1,36 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { apiClient } from '@/api'
 
-export const useTransactionStore = defineStore('transaction', () => {
-  const transactions = ref([])
-  const transaction = ref()
-  const error = ref()
+export const useWarehouseStore = defineStore('warehouse', () => {
+  const warehouses = ref([])
+  const warehouse = ref()
   const loading = ref(false)
+  const error = ref()
   const success = ref()
 
-  const fetchTransactions = async (params: any) => {
+  const fetchWarehouses = async (params: any) => {
     loading.value = true
+    warehouses.value = []
     error.value = null
     success.value = null
 
     try {
-      const response = await apiClient.get('/transactions', {
+      const response = await apiClient.get('/warehouses', {
         params: params,
       })
+
       const data = response.data
+
       if (data.success) {
         success.value = {
           success: true,
-          message: 'Items fetched successfully',
+          message: data.message,
         }
 
-        transactions.value = data.data
+        warehouses.value = data.data
+      } else {
+        throw new Error(data.data || data.message)
       }
 
       return
@@ -33,7 +38,7 @@ export const useTransactionStore = defineStore('transaction', () => {
       console.error(err)
       error.value = {
         success: false,
-        message: err,
+        message: err.message,
       }
     } finally {
       loading.value = false
@@ -43,24 +48,28 @@ export const useTransactionStore = defineStore('transaction', () => {
       }, 3000)
     }
   }
-
-  const fetchTransactionDetail = async (transactionId, params: any) => {
+  const fetchWarehouseDetails = async (warehouseId: any, params: any) => {
     loading.value = true
+    warehouse.value = null
     error.value = null
     success.value = null
 
     try {
-      const response = await apiClient.get(`/transactions/${transactionId}`, {
+      const response = await apiClient.get(`/warehouses/${warehouseId}`, {
         params: params,
       })
+
       const data = response.data
+
       if (data.success) {
         success.value = {
           success: true,
-          message: 'Items fetched successfully',
+          message: data.message,
         }
 
-        transaction.value = data.data
+        warehouse.value = data.data
+      } else {
+        throw new Error(data.data || data.message)
       }
 
       return
@@ -68,7 +77,7 @@ export const useTransactionStore = defineStore('transaction', () => {
       console.error(err)
       error.value = {
         success: false,
-        message: err,
+        message: err.message,
       }
     } finally {
       loading.value = false
@@ -80,12 +89,12 @@ export const useTransactionStore = defineStore('transaction', () => {
   }
 
   return {
-    transactions,
-    transaction,
-    error,
-    success,
+    warehouses,
+    warehouse,
     loading,
-    fetchTransactions,
-    fetchTransactionDetail,
+    success,
+    error,
+    fetchWarehouses,
+    fetchWarehouseDetails,
   }
 })

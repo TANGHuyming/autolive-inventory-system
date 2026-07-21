@@ -1,7 +1,8 @@
 <script setup>
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { MoreHorizontal } from '@lucide/vue'
+import { MoreHorizontal, ChevronsUpDown } from '@lucide/vue'
 import { onMounted, ref, watch } from 'vue'
+import { Field, FieldError, FieldGroup, FieldLabel, FieldSet } from '@/components/ui/field'
 import {
   Table,
   TableBody,
@@ -11,6 +12,16 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -21,8 +32,24 @@ import { useRouter } from 'vue-router'
 const searchQuery = ref('')
 const router = useRouter()
 const inventoryStore = useInventoryStore()
-const { items, loading, success, error } = storeToRefs(inventoryStore)
-const { fetchItems } = inventoryStore
+const { items, makes, loading, success, error } = storeToRefs(inventoryStore)
+const { fetchItems, fetchMakes } = inventoryStore
+const makePopoverOpen = ref(false)
+const selectedMake = ref()
+const searchMake = ref('')
+const filteredMakes = ref([])
+
+const carModelPopoverOpen = ref(false)
+const selectedCarModel = ref()
+const searchCarModel = ref('')
+const filteredCarModels = ref([])
+
+const itemForm = ref({
+  itemName: '',
+  itemNameKhmer: '',
+  make: '',
+  carModel: '',
+})
 
 const handleSearch = async (e) => {
   e.preventDefault()
@@ -35,8 +62,38 @@ const goToItem = (value) => {
   router.push(`/items/${value}`)
 }
 
+const handleResetForm = () => {
+  selectedMake.value = ''
+  selectedCarModel.value = ''
+  itemForm.value = {
+    itemName: '',
+    itemNameKhmer: '',
+    make: '',
+    carModel: '',
+  }
+}
+
 onMounted(async () => {
   await fetchItems()
+  await fetchMakes()
+  filteredMakes.value = makes.value
+})
+
+watch(searchMake, () => {
+  filteredMakes.value = makes.value.filter((m) =>
+    m.make_name.toUpperCase().includes(searchMake.value.toUpperCase()),
+  )
+})
+
+watch([selectedMake, searchCarModel], () => {
+  if (selectedMake.value.length === 0) return
+  filteredCarModels.value = makes.value.find(
+    (m) => m.make_name === selectedMake.value,
+  ).available_car_models
+
+  filteredCarModels.value = filteredCarModels.value.filter((m) =>
+    m.car_model_name.toUpperCase().includes(searchCarModel.value.toUpperCase()),
+  )
 })
 </script>
 
@@ -49,7 +106,7 @@ onMounted(async () => {
     <CardHeader>Inventory List</CardHeader>
 
     <CardContent>
-      <div class="max-w-7xl mx-auto my-5">
+      <div class="flex flex-row flex-wrap justify-between items-center my-5 gap-2">
         <form @submit="handleSearch">
           <Input
             type="text"
@@ -60,6 +117,166 @@ onMounted(async () => {
           />
           <Input type="submit" class="hidden" />
         </form>
+
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button variant="default" class="cursor-pointer">Add Item</Button>
+          </DialogTrigger>
+
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle> Add a new item </DialogTitle>
+              <DialogDescription>
+                Fill in the form below to add a new item to the inventory
+              </DialogDescription>
+            </DialogHeader>
+            <form @submit="handleAddItem">
+              <FieldSet>
+                <FieldGroup class="grid grid-cols-1 sm:grid-cols-2 gap-x-2 gap-y-6">
+                  <Field>
+                    <FieldLabel for="itemName">Name (EN)</FieldLabel>
+                    <Input
+                      class="text-sm"
+                      id="itemName"
+                      type="text"
+                      required
+                      placeholder="Enter item name..."
+                      v-model="itemForm.itemName"
+                      @input:v-model="(e) => (itemForm.itemName = e.target.value)"
+                    />
+                  </Field>
+
+                  <Field>
+                    <FieldLabel for="itemNameKhmer">Name (KH)</FieldLabel>
+                    <Input
+                      class="text-sm"
+                      id="itemNameKhmer"
+                      type="text"
+                      required
+                      placeholder="សូមបញ្ចូលឈ្មោះ......"
+                      v-model="itemForm.itemNameKhmer"
+                      @input:v-model="(e) => (itemForm.itemNameKhmer = e.target.value)"
+                    />
+                  </Field>
+
+                  <!-- Car make -->
+                  <Field>
+                    <FieldLabel for="itemMake">Make</FieldLabel>
+                    <Popover id="itemMake" v-model:open="makePopoverOpen">
+                      <PopoverTrigger as-child>
+                        <Button variant="outline" role="combobox" class="w-full justify-between">
+                          {{ selectedMake || 'Select make...' }}
+                          <ChevronsUpDown class="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent class="w-full p-0">
+                        <div class="p-2 border-b">
+                          <Input
+                            type="text"
+                            placeholder="Search make..."
+                            v-model="searchMake"
+                            autofocus
+                          />
+                        </div>
+                        <ScrollArea class="max-h-60 overflow-y-auto">
+                          <div
+                            v-for="m in filteredMakes"
+                            :key="m.make_id"
+                            class="px-3 py-2 cursor-pointer hover:bg-accent text-sm"
+                            @click="
+                              () => {
+                                selectedMake = m.make_name
+                                makePopoverOpen = false
+                              }
+                            "
+                          >
+                            {{ m.make_name }}
+                          </div>
+                          <div
+                            v-if="!filteredMakes.length"
+                            class="px-3 py-2 text-sm text-muted-foreground"
+                          >
+                            No make found.
+                          </div>
+                        </ScrollArea>
+                      </PopoverContent>
+                    </Popover>
+                  </Field>
+
+                  <!-- Car model -->
+                  <Field>
+                    <FieldLabel for="itemCarModel">Car Model</FieldLabel>
+                    <Popover id="itemCarModel" v-model:open="carModelPopoverOpen">
+                      <PopoverTrigger as-child :disabled="!selectedMake">
+                        <Button variant="outline" role="combobox" class="w-full justify-between">
+                          {{
+                            !selectedMake
+                              ? 'Select make first'
+                              : selectedCarModel || 'Select car model...'
+                          }}
+                          <ChevronsUpDown class="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent class="w-full p-0">
+                        <div class="p-2 border-b">
+                          <Input
+                            type="text"
+                            placeholder="Search car model..."
+                            v-model="searchCarModel"
+                            autofocus
+                          />
+                        </div>
+                        <ScrollArea class="max-h-60 overflow-y-auto">
+                          <div
+                            v-for="m in filteredCarModels"
+                            :key="m.car_model_name"
+                            class="px-3 py-2 cursor-pointer hover:bg-accent text-sm"
+                            @click="
+                              () => {
+                                selectedCarModel = m.car_model_name
+                                carModelPopoverOpen = false
+                              }
+                            "
+                          >
+                            {{ m.car_model_name }}
+                          </div>
+                          <div
+                            v-if="!filteredCarModels.length"
+                            class="px-3 py-2 text-sm text-muted-foreground"
+                          >
+                            No car model found.
+                          </div>
+                        </ScrollArea>
+                      </PopoverContent>
+                    </Popover>
+                  </Field>
+
+                  <Field class="flex flex-col sm:flex-row mt-8 w-full">
+                    <Button
+                      class="cursor-pointer"
+                      variant="outline"
+                      @click="handleResetForm"
+                      type="button"
+                    >
+                      Reset
+                    </Button>
+                    <Button
+                      variant="default"
+                      type="submit"
+                      class="cursor-pointer"
+                      :class="{
+                        'opacity-50': loading,
+                      }"
+                      :disabled="loading"
+                    >
+                      {{ loading ? 'Adding item...' : 'Add item' }}
+                    </Button>
+                  </Field>
+                </FieldGroup>
+              </FieldSet>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
       <Table>
         <TableCaption>

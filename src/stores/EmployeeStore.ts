@@ -6,9 +6,10 @@ import { useNavStore } from './NavStore'
 
 export const useEmployeeStore = defineStore('employee', () => {
   const router = useRouter()
-  const { resetNavItem } = useNavStore()
+  const { setNavItem } = useNavStore()
   const profile = ref(null)
   const employees = ref([])
+  const employee = ref()
   const loading = ref(false)
   const error = ref()
   const success = ref()
@@ -37,6 +38,7 @@ export const useEmployeeStore = defineStore('employee', () => {
         message: 'Login successful!',
       }
 
+      setNavItem('/')
       router.push('/')
 
       return
@@ -125,13 +127,14 @@ export const useEmployeeStore = defineStore('employee', () => {
     } finally {
       profile.value = null
       sessionStorage.removeItem('authToken')
-      resetNavItem()
       router.push('/login')
     }
   }
 
   async function fetchEmployees(params: any) {
     loading.value = true
+    error.value = null
+    success.value = null
     try {
       const response = await apiClient.get('/employees', {
         params: params,
@@ -142,9 +145,44 @@ export const useEmployeeStore = defineStore('employee', () => {
       if (data.success) {
         success.value = {
           success: true,
-          message: 'Items fetched successfully',
+          message: 'Employees fetched successfully',
         }
         employees.value = data.data
+      }
+
+      return
+    } catch (err) {
+      console.error(err)
+      error.value = {
+        success: false,
+        message: err,
+      }
+    } finally {
+      loading.value = false
+      setTimeout(() => {
+        error.value = null
+        success.value = null
+      }, 3000)
+    }
+  }
+
+  async function fetchEmployeeDetail(employeeId: string, params: any) {
+    loading.value = true
+    error.value = null
+    success.value = null
+    try {
+      const response = await apiClient.get(`/employees/${employeeId}`, {
+        params: params,
+      })
+
+      const data = response.data
+
+      if (data.success) {
+        success.value = {
+          success: true,
+          message: 'Employees fetched successfully',
+        }
+        employee.value = data.data
       }
 
       return
@@ -166,6 +204,7 @@ export const useEmployeeStore = defineStore('employee', () => {
   return {
     profile,
     employees,
+    employee,
     loading,
     error,
     success,
@@ -173,6 +212,7 @@ export const useEmployeeStore = defineStore('employee', () => {
     logout,
     register,
     fetchEmployees,
+    fetchEmployeeDetail,
     me,
   }
 })

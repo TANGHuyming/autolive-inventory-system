@@ -49,13 +49,13 @@ onMounted(async () => {
     <Skeleton v-for="n in 10" :key="n" class="bg-accent w-full h-10" />
   </div>
 
-  <div v-else class="space-y-6">
+  <div v-else class="space-y-6 max-w-7xl mx-auto">
     <!-- Item Overview -->
     <Card>
       <CardHeader>
-        <div class="flex items-start justify-between">
+        <div class="flex flex-col sm:flex-row items-start justify-between gap-2">
           <div>
-            <CardTitle class="text-2xl">{{ item.item_name_en }}</CardTitle>
+            <CardTitle class="text-lg md:text-2xl">{{ item.item_name_en }}</CardTitle>
             <p v-if="item.item_name_kh" class="text-muted-foreground">{{ item.item_name_kh }}</p>
           </div>
           <Badge variant="default">Code: {{ item.item_code }}</Badge>
@@ -78,16 +78,24 @@ onMounted(async () => {
 
     <!-- Shelf / Warehouse Locations -->
     <div class="space-y-3">
-      <h2 class="text-lg font-semibold">Stock Locations</h2>
-      <Card v-for="(shelf, i) in item.shelves" :key="i">
-        <CardContent class="flex flex-col sm:flex-row items-center justify-between gap-4 p-4">
+      <Card>
+        <CardHeader><CardTitle>Stock Locations</CardTitle></CardHeader>
+        <CardContent
+          v-for="(shelf, i) in item.shelves"
+          :key="i"
+          class="flex flex-col sm:flex-row items-center justify-between gap-4 p-4"
+        >
           <div class="flex items-center gap-3">
             <div class="rounded-full bg-muted p-2">
               <MapPin class="h-5 w-5 text-muted-foreground" />
             </div>
 
             <div>
-              <p class="font-medium">{{ shelf.bay.warehouse.warehouse_name }}</p>
+              <RouterLink
+                :to="`/warehouses/${shelf.bay.warehouse.warehouse_id}`"
+                class="font-medium hover:underline underline-offset-4"
+                >{{ shelf.bay.warehouse.warehouse_name }}</RouterLink
+              >
               <p class="text-sm text-muted-foreground">
                 {{ shelf.bay.warehouse.village }}, {{ shelf.bay.warehouse.commune }},
                 {{ shelf.bay.warehouse.district }}, {{ shelf.bay.warehouse.city }}
@@ -138,8 +146,8 @@ onMounted(async () => {
 
         <Table>
           <TableCaption>{{ item.transactions.length }} transaction(s) for this item.</TableCaption>
-          <TableHeader class="bg-primary text-primary-foreground hover:bg-primary">
-            <TableRow>
+          <TableHeader>
+            <TableRow class="bg-primary text-primary-foreground hover:bg-primary">
               <TableHead>Transaction ID</TableHead>
               <TableHead>Approver</TableHead>
               <TableHead>Requester</TableHead>
@@ -148,7 +156,11 @@ onMounted(async () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            <TableRow v-for="tx in item.transactions" :key="tx.transaction_id">
+            <TableRow
+              v-for="tx in item.transactions"
+              :key="tx.transaction_id"
+              class="cursor-pointer"
+            >
               <TableCell>#{{ tx.transaction_id }}</TableCell>
               <TableCell>{{ tx.approver.employee_name }}</TableCell>
               <TableCell>{{ tx.requester_name }}</TableCell>

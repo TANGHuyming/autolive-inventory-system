@@ -27,6 +27,14 @@ const router = createRouter({
           },
         },
         {
+          path: '/employees/:employeeId',
+          name: 'Employee Detail',
+          component: () => import('@/views/EmployeeDetailView.vue'),
+          meta: {
+            permission: 'admin.super_admin',
+          },
+        },
+        {
           path: '/items',
           name: 'Items',
           component: () => import('@/views/ItemView.vue'),
@@ -43,6 +51,24 @@ const router = createRouter({
           path: '/transactions',
           name: 'Transactions',
           component: () => import('@/views/TransactionView.vue'),
+        },
+        {
+          path: '/transactions/:transactionId',
+          name: 'Transaction Detail',
+          component: () => import('@/views/TransactionDetailView.vue'),
+          meta: {
+            permission: 'admin.super_admin',
+          },
+        },
+        {
+          path: '/warehouses',
+          name: 'Warehouses',
+          component: () => import('@/views/WarehouseView.vue'),
+        },
+        {
+          path: '/warehouses/:warehouseId',
+          name: 'Warehouse Detail',
+          component: () => import('@/views/WarehouseDetailView.vue'),
         },
         {
           path: '/access-denied',

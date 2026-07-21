@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
-import { Menu, Sun, Moon } from '@lucide/vue'
+import { Menu, Sun, Moon, User } from '@lucide/vue'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
   NavigationMenu,
   NavigationMenuItem,
@@ -18,6 +19,7 @@ import {
   BreadcrumbItem,
   BreadcrumbLink,
   BreadcrumbList,
+  BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb'
 import { Button } from '@/components/ui/button'
@@ -26,7 +28,9 @@ import { RouterLink, useRouter } from 'vue-router'
 import { useNavStore } from '@/stores/NavStore'
 import { storeToRefs } from 'pinia'
 import { useEmployeeStore } from '@/stores/EmployeeStore'
+import { useRoute } from 'vue-router'
 
+const route = useRoute()
 const navStore = useNavStore()
 const employeeStore = useEmployeeStore()
 const router = useRouter()
@@ -54,38 +58,52 @@ function isPermitted(value) {
 
   return true
 }
+
+onMounted(() => {
+  setNavItem(navTitles.value[1].location ?? route.path)
+})
 </script>
 
 <template>
   <header class="sticky top-0 w-full z-10 backdrop-blur-2xl">
     <div class="flex flex-row justify-between items-center max-w-7xl mx-auto rounded-lg px-4 py-2">
       <div class="flex flex-row gap-5 items-center">
-        <div class="bg-background w-16 h-16 rounded-full border-2 border-primary overflow-hidden">
-          <img
+        <Avatar
+          class="bg-background w-16 h-16 rounded-full border-2 border-primary overflow-hidden"
+        >
+          <AvatarImage
             src="../../../public/logo.png"
-            alt="Image of autolive logo"
-            class="object-contain w-full h-full cursor-pointer"
+            class="object-contain cursor-pointer"
             @click="() => router.push('/')"
           />
-        </div>
+          <AvatarFallback>COMPANY LOGO</AvatarFallback>
+        </Avatar>
 
-        <!-- <h1 class="text-xl lg:text-2xl font-bold">{{ navTitles }}</h1> -->
-        <Breadcrumb>
-          <BreadcrumbList class="list-none flex flex-row">
+        <Breadcrumb class="hidden sm:block">
+          <BreadcrumbList class="list-none text-lg md:text-2xl font-bold">
             <BreadcrumbItem v-for="(navTitle, index) in navTitles" :key="navTitle">
-              <BreadcrumbLink asChild class="flex flex-row items-center text-2xl font-bold">
-                <RouterLink :to="navTitle.value" class="mx-2">{{ navTitle.label }}</RouterLink>
-                <BreadcrumbSeparator
-                  v-if="index !== navTitles.length - 1"
-                  class="mx-2"
-                ></BreadcrumbSeparator>
+              <BreadcrumbLink asChild>
+                <div
+                  v-if="index !== navTitles.length - 1 && index !== 0"
+                  class="flex flex-row items-center"
+                >
+                  <RouterLink
+                    :to="navTitle.location"
+                    class="mx-2 underline-offset-4 hover:underline text-foreground"
+                    >{{ navTitle.name }}</RouterLink
+                  >
+                  <BreadcrumbSeparator class="mx-2"></BreadcrumbSeparator>
+                </div>
+                <BreadcrumbPage v-else-if="index !== 0" class="font-bold"
+                  >{{ navTitle.name }}
+                </BreadcrumbPage>
               </BreadcrumbLink>
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
       </div>
 
-      <nav class="flex flex-row items-center gap-5">
+      <nav class="flex flex-row items-center gap-2 sm:gap-5">
         <!-- Light dark toggle -->
         <Toggle @click="toggleDark" class="cursor-pointer">
           <Sun v-if="isLight" />
@@ -93,10 +111,10 @@ function isPermitted(value) {
         </Toggle>
 
         <!-- Desktop navigation -->
-        <div class="hidden md:block">
+        <div class="hidden lg:block">
           <NavigationMenu>
             <NavigationMenuList>
-              <NavigationMenuItem v-for="opt in navOptions" :key="opt.value" :value="opt.value">
+              <NavigationMenuItem v-for="opt in navOptions" :key="opt.value">
                 <NavigationMenuLink
                   asChild
                   v-if="isPermitted(opt.permission)"
@@ -105,13 +123,20 @@ function isPermitted(value) {
                 >
                   <RouterLink :to="opt.value" class="font-bold text-md">{{ opt.label }}</RouterLink>
                 </NavigationMenuLink>
+
+                <!-- Do later -->
+                <NavigationMenuSub v-else-if="opt.hasChildren">
+                  <NavigationTrigger>{{ opt.label }}</NavigationTrigger>
+
+                  <NavigationContent></NavigationContent>
+                </NavigationMenuSub>
               </NavigationMenuItem>
             </NavigationMenuList>
           </NavigationMenu>
         </div>
 
         <!-- Mobile navigation -->
-        <div class="block md:hidden">
+        <div class="block lg:hidden">
           <DropdownMenu>
             <DropdownMenuTrigger as-child>
               <Button variant="ghost" size="icon" class="cursor-pointer">
@@ -123,9 +148,9 @@ function isPermitted(value) {
                 v-for="opt in navOptions"
                 :key="opt.value"
                 :class="{ 'font-bold': opt.value === navItem }"
-                as-child
+                asChild
               >
-                <RouterLink :to="opt.value" @click="() => setNavItem(opt.value)">
+                <RouterLink :to="opt.value" @click="setNavItem(opt.value)">
                   {{ opt.label }}
                 </RouterLink>
               </DropdownMenuItem>
@@ -137,7 +162,10 @@ function isPermitted(value) {
         <div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="default" class="cursor-pointer">Profile</Button>
+              <Button variant="default" class="cursor-pointer">
+                <span class="hidden sm:block">Profile</span>
+                <User class="block sm:hidden" />
+              </Button>
             </DropdownMenuTrigger>
 
             <DropdownMenuContent>

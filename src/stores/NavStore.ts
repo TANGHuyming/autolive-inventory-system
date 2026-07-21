@@ -7,25 +7,24 @@ export const useNavStore = defineStore('nav', () => {
   const navOptions = ref([
     { value: '/', label: 'Home' },
     { value: '/employees', label: 'Employees', permission: 'admin.super_admin' },
+    { value: '/warehouses', label: 'Warehouses', permission: 'admin.super_admin' },
     { value: '/items', label: 'Items' },
     { value: '/transactions', label: 'Transactions', permission: 'admin.super_admin' },
   ])
-  const navItem = ref(navOptions.value.find((opt) => opt.label === route.name)?.value || '/')
+  const navItem = ref(route.path)
   const navTitles = computed(() => {
-    return route.matched.map((r) => {
+    const breadcrumbs = route.path.split('/').map((p) => {
       return {
-        value: r.path,
-        label: r.name,
+        name: p.length === 0 ? 'Home' : p[0]?.toUpperCase() + p.slice(1).toLowerCase(),
+        location: `/${p}`,
       }
     })
+
+    return breadcrumbs
   })
 
   const setNavItem = (value: string) => {
     navItem.value = value
-  }
-
-  const resetNavItem = () => {
-    navItem.value = '/'
   }
 
   return {
@@ -33,6 +32,5 @@ export const useNavStore = defineStore('nav', () => {
     navOptions,
     navTitles,
     setNavItem,
-    resetNavItem,
   }
 })

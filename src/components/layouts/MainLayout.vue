@@ -5,7 +5,7 @@ import Footer from '@/components/layouts/Footer.vue'
 
 <template>
   <Header />
-  <main class="min-h-screen p-10">
+  <main class="min-h-screen px-2">
     <RouterView />
   </main>
   <Footer />

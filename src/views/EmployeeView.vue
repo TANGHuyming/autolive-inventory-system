@@ -17,8 +17,10 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Badge } from '@/components/ui/badge'
 import { useEmployeeStore } from '@/stores/EmployeeStore'
 import { storeToRefs } from 'pinia'
+import { useRouter } from 'vue-router'
 
 const searchQuery = ref('')
+const router = useRouter()
 const employeeStore = useEmployeeStore()
 const { employees, success, error, loading } = storeToRefs(employeeStore)
 const { fetchEmployees } = employeeStore
@@ -73,6 +75,7 @@ onMounted(async () => {
             v-for="employee in employees"
             :key="employee.employee_id"
             class="cursor-pointer"
+            @click="() => router.push(`/employees/${employee.employee_id}`)"
           >
             <TableCell>{{ employee.employee_name }}</TableCell>
             <TableCell>{{ employee.employee_email }}</TableCell>

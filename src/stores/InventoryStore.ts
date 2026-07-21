@@ -4,6 +4,7 @@ import { apiClient } from '@/api'
 
 export const useInventoryStore = defineStore('inventory', () => {
   const items = ref([])
+  const makes = ref([])
   const item = ref()
   const error = ref()
   const loading = ref(false)
@@ -46,6 +47,7 @@ export const useInventoryStore = defineStore('inventory', () => {
 
   const fetchItemDetails = async (itemId: any, params: any) => {
     loading.value = true
+    item.value = null
     error.value = null
     success.value = null
 
@@ -83,13 +85,50 @@ export const useInventoryStore = defineStore('inventory', () => {
     }
   }
 
+  const fetchMakes = async (params: any) => {
+    loading.value = true
+    error.value = null
+    success.value = null
+
+    try {
+      const response = await apiClient.get('/makes', {
+        params: params,
+      })
+      const data = response.data
+      if (data.success) {
+        success.value = {
+          success: true,
+          message: 'Makes fetched successfully',
+        }
+
+        makes.value = data.data
+      }
+
+      return
+    } catch (err) {
+      console.error(err)
+      error.value = {
+        success: false,
+        message: err,
+      }
+    } finally {
+      loading.value = false
+      setTimeout(() => {
+        error.value = null
+        success.value = null
+      }, 3000)
+    }
+  }
+
   return {
     items,
+    makes,
     item,
     error,
     success,
     loading,
     fetchItems,
     fetchItemDetails,
+    fetchMakes,
   }
 })
