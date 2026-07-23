@@ -123,13 +123,6 @@ onMounted(() => {
                 >
                   <RouterLink :to="opt.value" class="font-bold text-md">{{ opt.label }}</RouterLink>
                 </NavigationMenuLink>
-
-                <!-- Do later -->
-                <NavigationMenuSub v-else-if="opt.hasChildren">
-                  <NavigationTrigger>{{ opt.label }}</NavigationTrigger>
-
-                  <NavigationContent></NavigationContent>
-                </NavigationMenuSub>
               </NavigationMenuItem>
             </NavigationMenuList>
           </NavigationMenu>

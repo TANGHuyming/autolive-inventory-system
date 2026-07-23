@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import { apiClient } from '@/api'
 
 export const useWarehouseStore = defineStore('warehouse', () => {
@@ -48,6 +48,7 @@ export const useWarehouseStore = defineStore('warehouse', () => {
       }, 3000)
     }
   }
+
   const fetchWarehouseDetails = async (warehouseId: any, params: any) => {
     loading.value = true
     warehouse.value = null
