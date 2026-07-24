@@ -1,8 +1,8 @@
 <script setup>
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { MoreHorizontal, ChevronsUpDown, Trash2 } from '@lucide/vue'
-import { onMounted, ref, watch, computed } from 'vue'
+import { MoreHorizontal, ChevronsUpDown, Trash2, Image, Pencil, Plus } from '@lucide/vue'
+import { onMounted, ref, watch, computed, onUnmounted } from 'vue'
 import { Field, FieldError, FieldGroup, FieldLabel, FieldSet } from '@/components/ui/field'
 import {
   Table,
@@ -42,7 +42,6 @@ const { fetchItems, fetchMakes } = inventoryStore
 const { fetchWarehouses } = warehouseStore
 
 const warehousePopoverOpen = ref(false)
-const selectedWarehouse = ref('')
 const searchWarehouse = ref('')
 const filteredWarehouses = computed(() => {
   return warehouses.value.filter((w) =>
@@ -51,7 +50,6 @@ const filteredWarehouses = computed(() => {
 })
 
 const makePopoverOpen = ref(false)
-const selectedMake = ref('')
 const searchMake = ref('')
 const filteredMakes = computed(() => {
   return makes.value.filter((m) =>
@@ -60,11 +58,10 @@ const filteredMakes = computed(() => {
 })
 
 const carModelPopoverOpen = ref(false)
-const selectedCarModel = ref('')
 const searchCarModel = ref('')
 const filteredCarModels = computed(() => {
-  if (selectedMake.value.length === 0) return []
-  const availableCarModels = makes.value.find((m) => m.make_name === selectedMake.value).car_models
+  if (itemForm.value.make.length === 0) return []
+  const availableCarModels = makes.value.find((m) => m.make_name === itemForm.value.make).car_models
 
   return availableCarModels.filter((m) =>
     m.car_model_name.toUpperCase().includes(searchCarModel.value.toUpperCase()),
@@ -72,14 +69,16 @@ const filteredCarModels = computed(() => {
 })
 
 const yearRangePopoverOpen = ref(false)
-const selectedYearRange = ref([])
 const yearRange = computed(() => {
-  if (selectedCarModel.value.length === 0) return []
+  if (itemForm.value.carModel.length === 0) return []
   const availableYears = filteredCarModels.value.find(
-    (m) => m.car_model_name === selectedCarModel.value,
+    (m) => m.car_model_name === itemForm.value.carModel,
   ).years
   return [availableYears[0].year_name, availableYears[availableYears.length - 1].year_name]
 })
+
+const fileInputKey = ref(0)
+const itemImageUrl = ref('')
 
 const showLocationForm = ref(false)
 
@@ -93,12 +92,15 @@ const itemForm = ref({
   itemName: '',
   itemNameKhmer: '',
   itemCode: '',
+  itemStockQuantity: 0,
   make: '',
   carModel: '',
   yearRange: [],
+  itemImage: null,
 })
 
 const itemsToAssign = ref([])
+const showAssignedItems = ref(false)
 
 const handleSearch = async (e) => {
   e.preventDefault()
@@ -121,24 +123,23 @@ const handleResetLocationForm = () => {
 }
 
 const handleResetForm = () => {
-  selectedMake.value = ''
-  selectedCarModel.value = ''
+  fileInputKey.value++
   itemForm.value = {
     itemName: '',
     itemNameKhmer: '',
     itemCode: '',
+    itemStockQuantity: 0,
     make: '',
     carModel: '',
     yearRange: [],
+    itemImage: null,
   }
 }
 
 const handleAddMoreItems = () => {
   itemForm.value = {
     ...itemForm.value,
-    make: selectedMake.value,
-    carModel: selectedCarModel.value,
-    yearRange: selectedYearRange.value,
+    itemImagePopoverOpen: false,
   }
 
   itemsToAssign.value.push(itemForm.value)
@@ -146,8 +147,28 @@ const handleAddMoreItems = () => {
   handleResetForm()
 }
 
+const handleFileChange = (event) => {
+  itemForm.value.itemImage = event.target.files[0] || null
+}
+
+const setItemImageUrl = (image) => {
+  if (!image) return
+  itemImageUrl.value = ''
+  URL.revokeObjectURL(itemImageUrl.value)
+  itemImageUrl.value = URL.createObjectURL(image)
+}
+
 const removeItem = (index) => {
   itemsToAssign.value.splice(index, 1)
+}
+
+const editItem = (index) => {
+  itemForm.value = itemsToAssign.value[index]
+  removeItem(index)
+}
+
+const copyItem = (index) => {
+  itemForm.value = itemsToAssign.value[index]
 }
 
 onMounted(async () => {
@@ -156,12 +177,10 @@ onMounted(async () => {
   await fetchWarehouses()
 })
 
-watch(selectedMake, () => {
-  selectedCarModel.value = ''
-})
-
-watch(selectedCarModel, () => {
-  selectedYearRange.value = yearRange.value
+onUnmounted(() => {
+  if (!itemForm.value.itemImage || itemImageUrl.value.length !== 0) {
+    URL.revokeObjectURL(itemImageUrl.value)
+  }
 })
 </script>
 
@@ -213,7 +232,7 @@ watch(selectedCarModel, () => {
                   <Popover id="warehouse" v-model:open="warehousePopoverOpen">
                     <PopoverTrigger asChild>
                       <Button variant="outline" role="combobox" class="w-full justify-between">
-                        {{ !selectedWarehouse ? 'Select Warehouse' : selectedWarehouse }}
+                        {{ locationForm.warehouseName || 'Select Warehouse' }}
                         <ChevronsUpDown class="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
                     </PopoverTrigger>
@@ -233,7 +252,7 @@ watch(selectedCarModel, () => {
                           class="px-3 py-2 cursor-pointer hover:bg-accent text-sm"
                           @click="
                             () => {
-                              selectedWarehouse = w.warehouse_name
+                              locationForm.warehouseName = w.warehouse_name
                               warehousePopoverOpen = false
                             }
                           "
@@ -355,7 +374,7 @@ watch(selectedCarModel, () => {
                   <Popover id="itemMake" v-model:open="makePopoverOpen">
                     <PopoverTrigger as-child>
                       <Button variant="outline" role="combobox" class="w-full justify-between">
-                        {{ selectedMake || 'Select make...' }}
+                        {{ itemForm.make || 'Select make...' }}
                         <ChevronsUpDown class="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
                     </PopoverTrigger>
@@ -375,7 +394,8 @@ watch(selectedCarModel, () => {
                           class="px-3 py-2 cursor-pointer hover:bg-accent text-sm"
                           @click="
                             () => {
-                              selectedMake = m.make_name
+                              itemForm.make = m.make_name
+                              itemForm.carModel = ''
                               makePopoverOpen = false
                             }
                           "
@@ -397,13 +417,9 @@ watch(selectedCarModel, () => {
                 <Field>
                   <FieldLabel for="itemCarModel">Car Model</FieldLabel>
                   <Popover id="itemCarModel" v-model:open="carModelPopoverOpen">
-                    <PopoverTrigger as-child :disabled="!selectedMake">
+                    <PopoverTrigger as-child :disabled="!itemForm.make">
                       <Button variant="outline" role="combobox" class="w-full justify-between">
-                        {{
-                          !selectedMake
-                            ? 'Select make first'
-                            : selectedCarModel || 'Select car model...'
-                        }}
+                        {{ itemForm.carModel || 'Select car model...' }}
                         <ChevronsUpDown class="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
                     </PopoverTrigger>
@@ -423,7 +439,8 @@ watch(selectedCarModel, () => {
                           class="px-3 py-2 cursor-pointer hover:bg-accent text-sm"
                           @click="
                             () => {
-                              selectedCarModel = m.car_model_name
+                              itemForm.carModel = m.car_model_name
+                              itemForm.yearRange = yearRange
                               carModelPopoverOpen = false
                             }
                           "
@@ -444,18 +461,21 @@ watch(selectedCarModel, () => {
                 <Field>
                   <FieldLabel for="yearRange">Year</FieldLabel>
                   <Popover id="yearRange" v-model:open="yearRangePopoverOpen">
-                    <PopoverTrigger asChild :disabled="!selectedCarModel">
+                    <PopoverTrigger asChild :disabled="!itemForm.carModel">
                       <Button variant="outline" role="combobox" class="w-full justify-between">
-                        <span>Select Year Range</span>
+                        <span>
+                          {{
+                            itemForm.yearRange.length === 0
+                              ? 'Select year range'
+                              : itemForm.yearRange[0] + ' to ' + itemForm.yearRange[1]
+                          }}
+                        </span>
                         <ChevronsUpDown class="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent>
-                      <h2 class="text-md font-bold text-foreground text-center">
-                        {{ selectedYearRange[0] + ' to ' + selectedYearRange[1] }}
-                      </h2>
                       <Slider
-                        v-model="selectedYearRange"
+                        v-model="itemForm.yearRange"
                         :step="1"
                         :min="yearRange[0]"
                         :max="yearRange[1]"
@@ -474,6 +494,8 @@ watch(selectedCarModel, () => {
                     type="file"
                     accept="image/jpg, image/jpeg, image/png, image/avif"
                     id="itemImage"
+                    :key="fileInputKey"
+                    @change="handleFileChange"
                   />
                 </Field>
 
@@ -527,11 +549,11 @@ watch(selectedCarModel, () => {
                         <TableHead>Name (EN)</TableHead>
                         <TableHead>Name (KH)</TableHead>
                         <TableHead>Code</TableHead>
-                        <TableHead class="text-right">Stock</TableHead>
+                        <TableHead>Stock</TableHead>
                         <TableHead>Make</TableHead>
                         <TableHead>Model</TableHead>
                         <TableHead>Year</TableHead>
-                        <TableHead class="w-[60px]"></TableHead>
+                        <TableHead class="text-center">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -549,11 +571,52 @@ watch(selectedCarModel, () => {
                         <TableCell>
                           <Badge variant="secondary">{{ item.itemCode }}</Badge>
                         </TableCell>
-                        <TableCell class="text-right">{{ item.itemStockQuantity }}</TableCell>
+                        <TableCell>{{ item.itemStockQuantity }}</TableCell>
                         <TableCell>{{ item.make }}</TableCell>
                         <TableCell>{{ item.carModel }}</TableCell>
                         <TableCell>{{ item.yearRange[0] }}–{{ item.yearRange[1] }}</TableCell>
-                        <TableCell>
+                        <TableCell class="flex justify-center gap-x-2">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            class="h-8 w-8 cursor-pointer"
+                            @click="copyItem(index)"
+                          >
+                            <Plus class="h-4 w-4 text-primary" />
+                          </Button>
+
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            class="h-8 w-8 cursor-pointer"
+                            @click="editItem(index)"
+                          >
+                            <Pencil class="h-4 w-4 text-primary" />
+                          </Button>
+
+                          <Popover v-model:open="item.itemImagePopoverOpen">
+                            <PopoverTrigger asChild>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                class="h-8 w-8 cursor-pointer"
+                                @click="setItemImageUrl(item.itemImage)"
+                              >
+                                <Image class="h-4 w-4 text-primary" />
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent>
+                              <img
+                                :src="itemImageUrl"
+                                :alt="`Image of ${item.itemName}`"
+                                class="object-cover w-full h-full"
+                              />
+                            </PopoverContent>
+                          </Popover>
+
                           <Button
                             type="button"
                             variant="ghost"
@@ -573,6 +636,64 @@ watch(selectedCarModel, () => {
           </DialogContent>
         </Dialog>
       </div>
+
+      <Dialog v-model:open="showAssignedItems">
+        <DialogContent class="min-w-[80vw]">
+          <DialogHeader>
+            <DialogTitle>Assigned Items</DialogTitle>
+            <DialogDescription class="flex flex-col">
+              <span>Please confirm that all the items here are correct </span>
+              <span class="font-bold text-md">
+                {{
+                  `Warehouse: ${locationForm.warehouseName}  Bay: ${locationForm.bay}  Shelf: ${locationForm.shelf}`
+                }}
+              </span>
+            </DialogDescription>
+          </DialogHeader>
+
+          <Table>
+            <TableHeader>
+              <TableRow class="bg-primary text-primary-foreground hover:bg-primary">
+                <TableHead>Name (EN)</TableHead>
+                <TableHead>Name (KH)</TableHead>
+                <TableHead>Code</TableHead>
+                <TableHead class="text-right">Stock</TableHead>
+                <TableHead>Make</TableHead>
+                <TableHead>Model</TableHead>
+                <TableHead>Year</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <TableRow v-if="!itemsToAssign.length">
+                <TableCell
+                  :colspan="8"
+                  class="text-center text-muted-foreground py-6 hover:bg-background"
+                >
+                  No items added yet.
+                </TableCell>
+              </TableRow>
+              <TableRow v-for="(item, index) in itemsToAssign" :key="index">
+                <TableCell>{{ item.itemName }}</TableCell>
+                <TableCell>{{ item.itemNameKhmer }}</TableCell>
+                <TableCell>
+                  <Badge variant="secondary">{{ item.itemCode }}</Badge>
+                </TableCell>
+                <TableCell class="text-right">{{ item.itemStockQuantity }}</TableCell>
+                <TableCell>{{ item.make }}</TableCell>
+                <TableCell>{{ item.carModel }}</TableCell>
+                <TableCell>{{ item.yearRange[0] }}–{{ item.yearRange[1] }}</TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+
+          <div class="flex justify-end">
+            <Button type="button" @click="handleSubmitItems" class="w-full sm:max-w-48">
+              Confirm Submission
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <Table>
         <TableCaption>
           <div class="flex flex-wrap justify-start gap-x-6 gap-y-1 text-xs">
