@@ -28,10 +28,7 @@ export const useEmployeeStore = defineStore('employee', () => {
         throw new Error(data.data || data.message)
       }
 
-      const token = data.data.token
       profile.value = data.data.employee
-
-      sessionStorage.setItem('authToken', token)
 
       success.value = {
         success: true,
@@ -115,7 +112,6 @@ export const useEmployeeStore = defineStore('employee', () => {
     } catch (err) {
       console.error(err)
       profile.value = null
-      sessionStorage.removeItem('authToken')
     }
   }
 
@@ -126,7 +122,6 @@ export const useEmployeeStore = defineStore('employee', () => {
       console.error(err)
     } finally {
       profile.value = null
-      sessionStorage.removeItem('authToken')
       router.push('/login')
     }
   }

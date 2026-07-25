@@ -31,6 +31,7 @@ import { useInventoryStore } from '@/stores/InventoryStore'
 import { storeToRefs } from 'pinia'
 import { useRouter } from 'vue-router'
 import { useWarehouseStore } from '@/stores/WarehouseStore'
+import { toast } from 'vue-sonner'
 
 const searchQuery = ref('')
 const router = useRouter()
@@ -38,7 +39,7 @@ const inventoryStore = useInventoryStore()
 const warehouseStore = useWarehouseStore()
 const { items, makes, loading, success, error } = storeToRefs(inventoryStore)
 const { warehouses } = storeToRefs(warehouseStore)
-const { fetchItems, fetchMakes } = inventoryStore
+const { fetchItems, fetchMakes, bulkCreateItems } = inventoryStore
 const { fetchWarehouses } = warehouseStore
 
 const warehousePopoverOpen = ref(false)
@@ -46,6 +47,34 @@ const searchWarehouse = ref('')
 const filteredWarehouses = computed(() => {
   return warehouses.value.filter((w) =>
     w.warehouse_name.toUpperCase().includes(searchWarehouse.value.toUpperCase()),
+  )
+})
+
+const bayPopoverOpen = ref(false)
+const searchBay = ref('')
+const filteredBays = computed(() => {
+  if (!locationForm.value.warehouse) return []
+
+  const availableBays = warehouses.value.find(
+    (w) => w.warehouse_name === locationForm.value.warehouse,
+  ).bays
+
+  return availableBays.filter((b) =>
+    b.bay_name.toUpperCase().includes(searchBay.value.toUpperCase()),
+  )
+})
+
+const shelfPopoverOpen = ref(false)
+const searchShelf = ref('')
+const filteredShelves = computed(() => {
+  if (!locationForm.value.bay) return []
+
+  const availableShelves = filteredBays.value.find(
+    (b) => b.bay_name === locationForm.value.bay,
+  ).shelves
+
+  return availableShelves.filter((s) =>
+    s.shelf_name.toUpperCase().includes(searchShelf.value.toUpperCase()),
   )
 })
 
@@ -83,7 +112,7 @@ const itemImageUrl = ref('')
 const showLocationForm = ref(false)
 
 const locationForm = ref({
-  warehouseName: '',
+  warehouse: '',
   bay: '',
   shelf: '',
 })
@@ -114,9 +143,8 @@ const goToItem = (value) => {
 }
 
 const handleResetLocationForm = () => {
-  selectedWarehouse.value = ''
   locationForm.value = {
-    warehouseName: '',
+    warehouse: '',
     bay: '',
     shelf: '',
   }
@@ -137,6 +165,9 @@ const handleResetForm = () => {
 }
 
 const handleAddMoreItems = () => {
+  if (!validateItemFields(itemForm.value)) {
+    return
+  }
   itemForm.value = {
     ...itemForm.value,
     itemImagePopoverOpen: false,
@@ -171,10 +202,93 @@ const copyItem = (index) => {
   itemForm.value = itemsToAssign.value[index]
 }
 
-onMounted(async () => {
-  await fetchItems()
-  await fetchMakes()
-  await fetchWarehouses()
+const validateItemFields = (item) => {
+  try {
+    // Validate all string fields
+    const isEmpty = Object.values(item).some((i) => {
+      return i?.length === 0 || null
+    })
+    if (isEmpty) throw new Error('All fields must be filled')
+
+    // Validate stock quantity
+    if (item.itemStockQuantity < 0) throw new Error("Stock quantity can't be negative")
+
+    // Validate file size
+    const maxFileSize = 1024 * 1024 * 5 // in 5 MB
+    const allowedMimeTypes = ['image/jpg', 'image/jpeg', 'image/png', 'image/avif']
+    if (item.itemImage) {
+      if (item.itemImage.size > maxFileSize) throw new Error('File size is too large')
+      if (!allowedMimeTypes.includes(item.itemImage.type)) throw new Error('Invalid mime type')
+    }
+
+    toast.success('Item added successfully', {
+      description: 'Item successfully added to the queue',
+      position: 'top-center',
+    })
+
+    return true
+  } catch (err) {
+    console.error(err.message)
+    toast.error('Validation failed', {
+      description: err.message || 'Atleast one item validation failed',
+      position: 'top-center',
+    })
+    return false
+  }
+}
+
+const expandYearRange = (yearRange) => {
+  const start = yearRange[0]
+  const end = yearRange[1]
+  const expandedYearRange = []
+
+  for (let i = start; i <= end; i++) {
+    expandedYearRange.push(i)
+  }
+
+  return expandedYearRange
+}
+
+const toPayload = (items, location) => {
+  const formData = new FormData()
+
+  items.forEach((item, index) => {
+    formData.append(`items[${index}][nameEn]`, item.itemName)
+    formData.append(`items[${index}][nameKh]`, item.itemNameKhmer ?? '')
+    formData.append(`items[${index}][code]`, item.itemCode)
+    formData.append(`items[${index}][make]`, item.make)
+    formData.append(`items[${index}][model]`, item.carModel)
+    formData.append(`items[${index}][stock_quantity]`, item.itemStockQuantity)
+    formData.append(`items[${index}][item_image]`, item.itemImage)
+
+    expandYearRange(item.yearRange).forEach((year, yIndex) => {
+      formData.append(`items[${index}][yearRange][${yIndex}]`, year)
+    })
+    Object.entries(location).forEach(([key, value]) => {
+      formData.append(`items[${index}][${key}]`, value)
+    })
+  })
+
+  formData.append('method', 'POST')
+
+  return formData
+}
+
+const handleSubmitItems = () => {
+  const payload = toPayload(itemsToAssign.value, locationForm.value)
+  bulkCreateItems(payload)
+  if (!error.value) {
+    handleResetLocationForm()
+    handleResetForm()
+    itemsToAssign.value = []
+    fetchItems()
+  }
+
+  showAssignedItems.value = false
+}
+
+onMounted(() => {
+  fetchItems()
 })
 
 onUnmounted(() => {
@@ -210,7 +324,12 @@ onUnmounted(() => {
             <Button
               variant="default"
               class="cursor-pointer"
-              @click="() => (showLocationForm = true)"
+              @click="
+                () => {
+                  showLocationForm = true
+                  if (!warehouses || warehouses.length === 0) fetchWarehouses()
+                }
+              "
               >Add Item</Button
             >
           </DialogTrigger>
@@ -232,7 +351,7 @@ onUnmounted(() => {
                   <Popover id="warehouse" v-model:open="warehousePopoverOpen">
                     <PopoverTrigger asChild>
                       <Button variant="outline" role="combobox" class="w-full justify-between">
-                        {{ locationForm.warehouseName || 'Select Warehouse' }}
+                        {{ locationForm.warehouse || 'Select Warehouse' }}
                         <ChevronsUpDown class="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
                     </PopoverTrigger>
@@ -252,7 +371,9 @@ onUnmounted(() => {
                           class="px-3 py-2 cursor-pointer hover:bg-accent text-sm"
                           @click="
                             () => {
-                              locationForm.warehouseName = w.warehouse_name
+                              locationForm.warehouse = w.warehouse_name
+                              locationForm.bay = ''
+                              locationForm.shelf = ''
                               warehousePopoverOpen = false
                             }
                           "
@@ -272,27 +393,113 @@ onUnmounted(() => {
 
                 <Field>
                   <FieldLabel for="bay">Bay</FieldLabel>
-                  <Input
-                    class="text-sm"
-                    id="bay"
-                    type="text"
-                    placeholder="Enter bay name..."
-                    v-model="locationForm.bay"
-                    @input:v-model="(e) => (locationForm.bay = e.target.value)"
-                  />
+                  <Popover id="bay" v-model:open="bayPopoverOpen">
+                    <PopoverTrigger asChild :disabled="!locationForm.warehouse">
+                      <Button variant="outline" role="combobox" class="w-full justify-between">
+                        {{ locationForm.bay || 'Select Bay' }}
+                        <ChevronsUpDown class="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent class="w-full p-0">
+                      <div class="p-2 border-b">
+                        <Input
+                          type="text"
+                          placeholder="Search bay..."
+                          v-model="searchBay"
+                          autofocus
+                        />
+                      </div>
+                      <ScrollArea class="max-h-60 overflow-y-auto">
+                        <div
+                          v-for="b in filteredBays"
+                          :key="b.bay_id"
+                          class="px-3 py-2 cursor-pointer hover:bg-accent text-sm"
+                          @click="
+                            () => {
+                              locationForm.bay = b.bay_name
+                              locationForm.shelf = ''
+                              bayPopoverOpen = false
+                            }
+                          "
+                        >
+                          {{ b.bay_name }}
+                        </div>
+                        <div
+                          v-if="!filteredBays.length"
+                          class="px-3 py-2 text-sm text-muted-foreground"
+                        >
+                          No bay found.
+                        </div>
+                      </ScrollArea>
+                    </PopoverContent>
+                  </Popover>
                 </Field>
+                <!---->
+                <!-- <Field> -->
+                <!--   <FieldLabel for="bay">Bay</FieldLabel> -->
+                <!--   <Input -->
+                <!--     class="text-sm" -->
+                <!--     id="bay" -->
+                <!--     type="text" -->
+                <!--     placeholder="Enter bay name..." -->
+                <!--     v-model="locationForm.bay" -->
+                <!--     @input:v-model="(e) => (locationForm.bay = e.target.value)" -->
+                <!--   /> -->
+                <!-- </Field> -->
 
                 <Field>
-                  <FieldLabel for="shelf">Shelf</FieldLabel>
-                  <Input
-                    class="text-sm"
-                    id="shelf"
-                    type="text"
-                    placeholder="Enter shelf name..."
-                    v-model="locationForm.shelf"
-                    @input:v-model="(e) => (locationForm.shelf = e.target.value)"
-                  />
+                  <FieldLabel for="shelf">shelf</FieldLabel>
+                  <Popover id="shelf" v-model:open="shelfPopoverOpen">
+                    <PopoverTrigger asChild :disabled="!locationForm.bay">
+                      <Button variant="outline" role="combobox" class="w-full justify-between">
+                        {{ locationForm.shelf || 'Select Shelf' }}
+                        <ChevronsUpDown class="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent class="w-full p-0">
+                      <div class="p-2 border-b">
+                        <Input
+                          type="text"
+                          placeholder="Search shelf..."
+                          v-model="searchShelf"
+                          autofocus
+                        />
+                      </div>
+                      <ScrollArea class="max-h-60 overflow-y-auto">
+                        <div
+                          v-for="s in filteredShelves"
+                          :key="s.shelf_id"
+                          class="px-3 py-2 cursor-pointer hover:bg-accent text-sm"
+                          @click="
+                            () => {
+                              locationForm.shelf = s.shelf_name
+                              shelfPopoverOpen = false
+                            }
+                          "
+                        >
+                          {{ s.shelf_name }}
+                        </div>
+                        <div
+                          v-if="!filteredShelves.length"
+                          class="px-3 py-2 text-sm text-muted-foreground"
+                        >
+                          No shelf found.
+                        </div>
+                      </ScrollArea>
+                    </PopoverContent>
+                  </Popover>
                 </Field>
+                <!-- <Field> -->
+                <!--   <FieldLabel for="shelf">Shelf</FieldLabel> -->
+                <!--   <Input -->
+                <!--     class="text-sm" -->
+                <!--     id="shelf" -->
+                <!--     type="text" -->
+                <!--     placeholder="Enter shelf name..." -->
+                <!--     v-model="locationForm.shelf" -->
+                <!--     @input:v-model="(e) => (locationForm.shelf = e.target.value)" -->
+                <!--   /> -->
+                <!-- </Field> -->
 
                 <Field class="col-span-full grid grid-cols-1 sm:grid-cols-2">
                   <Button
@@ -310,6 +517,7 @@ onUnmounted(() => {
                     @click="
                       () => {
                         showLocationForm = false
+                        if (!makes || makes.length === 0) fetchMakes()
                       }
                     "
                   >
@@ -396,6 +604,7 @@ onUnmounted(() => {
                             () => {
                               itemForm.make = m.make_name
                               itemForm.carModel = ''
+                              itemForm.yearRange = yearRange
                               makePopoverOpen = false
                             }
                           "
@@ -492,7 +701,6 @@ onUnmounted(() => {
                   <FieldLabel for="itemImage">Item Image</FieldLabel>
                   <Input
                     type="file"
-                    accept="image/jpg, image/jpeg, image/png, image/avif"
                     id="itemImage"
                     :key="fileInputKey"
                     @change="handleFileChange"
@@ -645,7 +853,7 @@ onUnmounted(() => {
               <span>Please confirm that all the items here are correct </span>
               <span class="font-bold text-md">
                 {{
-                  `Warehouse: ${locationForm.warehouseName}  Bay: ${locationForm.bay}  Shelf: ${locationForm.shelf}`
+                  `Warehouse: ${locationForm.warehouse}  Bay: ${locationForm.bay}  Shelf: ${locationForm.shelf}`
                 }}
               </span>
             </DialogDescription>

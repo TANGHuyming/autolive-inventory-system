@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { apiClient } from '@/api'
+import { toast } from 'vue-sonner'
 
 export const useInventoryStore = defineStore('inventory', () => {
   const items = ref([])
@@ -86,21 +87,13 @@ export const useInventoryStore = defineStore('inventory', () => {
   }
 
   const fetchMakes = async (params: any) => {
-    loading.value = true
     error.value = null
-    success.value = null
-
     try {
       const response = await apiClient.get('/makes', {
         params: params,
       })
       const data = response.data
       if (data.success) {
-        success.value = {
-          success: true,
-          message: 'Makes fetched successfully',
-        }
-
         makes.value = data.data
       }
 
@@ -108,15 +101,33 @@ export const useInventoryStore = defineStore('inventory', () => {
     } catch (err) {
       console.error(err)
       error.value = {
-        success: false,
-        message: err,
+        message: err.message,
       }
+      toast.error('Error!', { description: err.message, position: 'top-center' })
+    }
+  }
+
+  const bulkCreateItems = async (payload: any) => {
+    loading.value = true
+    error.value = null
+    try {
+      const response = await apiClient.post('/inventories', payload)
+
+      const data = response.data
+
+      if (data.success) {
+        toast.success('Success!', { description: data.message, position: 'top-center' })
+      } else {
+        throw new Error(data.data.length === 0 ? data.message : data.data)
+      }
+    } catch (err) {
+      console.error(err)
+      error.value = {
+        message: err.message,
+      }
+      toast.error('Error!', { description: err.message, position: 'top-center' })
     } finally {
       loading.value = false
-      setTimeout(() => {
-        error.value = null
-        success.value = null
-      }, 3000)
     }
   }
 
@@ -130,5 +141,6 @@ export const useInventoryStore = defineStore('inventory', () => {
     fetchItems,
     fetchItemDetails,
     fetchMakes,
+    bulkCreateItems,
   }
 })

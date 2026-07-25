@@ -96,7 +96,6 @@ const router = createRouter({
 })
 
 router.beforeEach(async (to) => {
-  const authToken = sessionStorage.getItem('authToken') || null
   const employeeStore = useEmployeeStore()
 
   if (to.meta.public) {
@@ -106,7 +105,7 @@ router.beforeEach(async (to) => {
   // Me acts as a check auth too
   await employeeStore.me()
 
-  if (to.meta.requiresAuth && !authToken) {
+  if (to.meta.requiresAuth && !employeeStore.profile) {
     return '/login'
   }
 
@@ -116,6 +115,7 @@ router.beforeEach(async (to) => {
       return '/access-denied'
     }
   }
+
   return
 })
 

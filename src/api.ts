@@ -1,22 +1,30 @@
 import axios from 'axios'
 import router from '@/router'
 
-export const apiClient = axios.create({
-  baseURL: 'http://localhost:8000/api',
+export const webClient = axios.create({
+  baseURL: 'http://localhost:8000/',
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
     Accept: 'application/json',
   },
 })
 
-apiClient.interceptors.request.use(
-  (config) => {
-    const authToken = sessionStorage.getItem('authToken') || null
-    config.headers.Authorization = `Bearer ${authToken}`
-    return config
+export const apiClient = axios.create({
+  baseURL: 'http://localhost:8000/api',
+  withCredentials: true,
+  withXSRFToken: true,
+  headers: {
+    Accept: 'application/json',
   },
-  (error) => Promise.reject(error),
-)
+})
+
+apiClient.interceptors.request.use((config) => {
+  if (!(config.data instanceof FormData)) {
+    config.headers['Content-Type'] = 'application/json'
+  }
+  return config
+})
 
 apiClient.interceptors.response.use(
   (response) => response,
