@@ -22,7 +22,7 @@ import { storeToRefs } from 'pinia'
 const searchQuery = ref('')
 const route = useRoute()
 const employeeStore = useEmployeeStore()
-const { employee, loading, success, error } = storeToRefs(employeeStore)
+const { employee, loading } = storeToRefs(employeeStore)
 const { fetchEmployeeDetail } = employeeStore
 
 const handleSearch = async (e) => {

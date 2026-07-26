@@ -3,6 +3,7 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { apiClient } from '../api' // Your previously defined Axios instance
 import { useNavStore } from './NavStore'
+import { toast } from 'vue-sonner'
 
 export const useEmployeeStore = defineStore('employee', () => {
   const router = useRouter()
@@ -12,28 +13,22 @@ export const useEmployeeStore = defineStore('employee', () => {
   const employee = ref()
   const loading = ref(false)
   const error = ref()
-  const success = ref()
 
   async function login(params: any) {
     loading.value = true
     error.value = null
-    success.value = null
-
     try {
       const response = await apiClient.post('/auth/login', params)
 
       const data = response.data
 
-      if (!data.success) {
-        throw new Error(data.data || data.message)
+      if (data.success) {
+        toast.success('Login successful!', { position: 'top-center' })
+      } else {
+        throw new Error(data.data.length !== 0 ? data.data : data.message)
       }
 
       profile.value = data.data.employee
-
-      success.value = {
-        success: true,
-        message: 'Login successful!',
-      }
 
       setNavItem('/')
       router.push('/')
@@ -42,54 +37,37 @@ export const useEmployeeStore = defineStore('employee', () => {
     } catch (err) {
       console.error(err)
       error.value = {
-        success: false,
         message: err,
       }
+      toast.error('Error!', { description: err.message, position: 'top-center' })
     } finally {
       loading.value = false
-      setTimeout(() => {
-        error.value = null
-        success.value = null
-      }, 3000)
     }
   }
 
   async function register(params: any) {
     loading.value = true
     error.value = null
-    success.value = null
-
     try {
       const response = await apiClient.post('/auth/register', params)
 
-      if (response.status !== 200) {
-        throw new Error('Internal server error')
-      }
-
       const data = response.data
 
-      if (!data.success) {
-        throw new Error(data.message)
-      }
-
-      success.value = {
-        success: true,
-        message: 'Register successful!',
+      if (data.success) {
+        toast.success('Register successful!', { position: 'top-center' })
+      } else {
+        throw new Error(data.data.length !== 0 ? data.data : data.message)
       }
 
       return
     } catch (err) {
       console.error(err)
       error.value = {
-        success: false,
         message: err.message,
       }
+      toast.error('Error!', { description: err.message, position: 'top-center' })
     } finally {
       loading.value = false
-      setTimeout(() => {
-        error.value = null
-        success.value = null
-      }, 3000)
     }
   }
 
@@ -105,7 +83,6 @@ export const useEmployeeStore = defineStore('employee', () => {
 
       if (data.success) {
         profile.value = data.data
-        return data.data
       }
 
       return
@@ -129,7 +106,6 @@ export const useEmployeeStore = defineStore('employee', () => {
   async function fetchEmployees(params: any) {
     loading.value = true
     error.value = null
-    success.value = null
     try {
       const response = await apiClient.get('/employees', {
         params: params,
@@ -138,33 +114,26 @@ export const useEmployeeStore = defineStore('employee', () => {
       const data = response.data
 
       if (data.success) {
-        success.value = {
-          success: true,
-          message: 'Employees fetched successfully',
-        }
         employees.value = data.data
+      } else {
+        throw new Error(data.data.length !== 0 ? data.data : data.message)
       }
 
       return
     } catch (err) {
       console.error(err)
       error.value = {
-        success: false,
         message: err,
       }
+      toast.error('Error!', { description: err.message, position: 'top-center' })
     } finally {
       loading.value = false
-      setTimeout(() => {
-        error.value = null
-        success.value = null
-      }, 3000)
     }
   }
 
   async function fetchEmployeeDetail(employeeId: string, params: any) {
     loading.value = true
     error.value = null
-    success.value = null
     try {
       const response = await apiClient.get(`/employees/${employeeId}`, {
         params: params,
@@ -173,26 +142,20 @@ export const useEmployeeStore = defineStore('employee', () => {
       const data = response.data
 
       if (data.success) {
-        success.value = {
-          success: true,
-          message: 'Employees fetched successfully',
-        }
         employee.value = data.data
+      } else {
+        throw new Error(data.data.length !== 0 ? data.data : data.message)
       }
 
       return
     } catch (err) {
       console.error(err)
       error.value = {
-        success: false,
         message: err,
       }
+      toast.error('Error!', { description: err.message, position: 'top-center' })
     } finally {
       loading.value = false
-      setTimeout(() => {
-        error.value = null
-        success.value = null
-      }, 3000)
     }
   }
 
@@ -202,7 +165,6 @@ export const useEmployeeStore = defineStore('employee', () => {
     employee,
     loading,
     error,
-    success,
     login,
     logout,
     register,

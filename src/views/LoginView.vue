@@ -8,16 +8,15 @@ import {
   FieldSet,
   FieldTitle,
 } from '@/components/ui/field'
-import { AlertCircleIcon } from '@lucide/vue'
-import { Alert, AlertTitle } from '@/components/ui/alert'
 import { storeToRefs } from 'pinia'
 import { ref, watch } from 'vue'
 import { useEmployeeStore } from '@/stores/EmployeeStore'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import VueTurnstile from 'vue-turnstile'
 
 const employeeStore = useEmployeeStore()
-const { success, error, loading } = storeToRefs(employeeStore)
+const { error, loading } = storeToRefs(employeeStore)
 const { login, register } = employeeStore
 
 const isLogin = ref(true)
@@ -28,12 +27,20 @@ const email = ref(null)
 const password = ref(null)
 const confirmingPassword = ref(null)
 
+const token = ref('')
+const siteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY || ''
+
 const handleLogin = async (event) => {
   event.preventDefault()
-  await login({ email: email.value, password: password.value })
-
-  email.value = null
-  password.value = null
+  await login({
+    email: email.value,
+    password: password.value,
+    cf_turnstile_response: token.value,
+  })
+  if (!error.value) {
+    email.value = null
+    password.value = null
+  }
 }
 
 const handleRegister = async (event) => {
@@ -51,14 +58,16 @@ const handleRegister = async (event) => {
     password: password.value,
   })
 
-  firstName.value = null
-  lastName.value = null
-  email.value = null
-  telephone.value = null
-  password.value = null
-  confirmingPassword.value = null
+  if (!error.value) {
+    firstName.value = null
+    lastName.value = null
+    email.value = null
+    telephone.value = null
+    password.value = null
+    confirmingPassword.value = null
 
-  isLogin.value = true
+    isLogin.value = true
+  }
 }
 
 watch(isLogin, () => {
@@ -73,21 +82,6 @@ watch(isLogin, () => {
 
 <template>
   <div class="min-h-screen grid grid-cols-1 lg:grid-cols-2">
-    <Alert
-      v-if="success"
-      class="flex items-center justify-center fixed bottom-0 right-0 w-full bg-background/50 border border-background font-bold text-xl text-background"
-    >
-      <AlertCircleIcon />
-      <AlertTitle>{{ success.message }}</AlertTitle>
-    </Alert>
-    <Alert
-      v-else-if="error"
-      class="flex items-center justify-center fixed bottom-0 right-0 w-full bg-destructive/50 border border-destructive font-bold text-xl text-destructive"
-    >
-      <AlertCircleIcon />
-      <AlertTitle>{{ error.message }}</AlertTitle>
-    </Alert>
-
     <div
       class="bg-sidebar lg:flex flex-col justify-center items-center p-16 text-center gap-y-2 hidden"
     >
@@ -140,7 +134,8 @@ watch(isLogin, () => {
             />
           </Field>
 
-          <Field class="mt-8">
+          <Field>
+            <VueTurnstile :site-key="siteKey" v-model="token" />
             <Button
               variant="default"
               type="submit"
@@ -148,7 +143,7 @@ watch(isLogin, () => {
               :class="{
                 'opacity-50': loading,
               }"
-              :disabled="loading"
+              :disabled="loading || !token"
             >
               {{ loading ? 'Logging in...' : 'Log in' }}
             </Button>

@@ -11,15 +11,21 @@ export const useInventoryStore = defineStore('inventory', () => {
   const loading = ref(false)
   const success = ref()
 
-  const fetchItems = async (params: any) => {
+  const fetchItems = async (params: any, upToDate = false) => {
     loading.value = true
     error.value = null
     success.value = null
 
     try {
-      const response = await apiClient.get('/inventories', {
-        params: params,
-      })
+      let response
+      if (upToDate) {
+        response = await apiClient.get('/inventories/up-to-date')
+      } else {
+        response = await apiClient.get('/inventories', {
+          params: params,
+        })
+      }
+
       const data = response.data
       if (data.success) {
         success.value = {
@@ -155,6 +161,26 @@ export const useInventoryStore = defineStore('inventory', () => {
     }
   }
 
+  const deleteItem = async (itemId: any) => {
+    try {
+      const response = await apiClient.delete(`/inventories/${itemId}`)
+
+      const data = response.data
+
+      if (data.success) {
+        toast.success('Success!', { description: data.message, position: 'top-center' })
+      } else {
+        throw new Error(data.data.length === 0 ? data.message : data.data)
+      }
+    } catch (err) {
+      console.error(err)
+      error.value = {
+        message: err.message,
+      }
+      toast.error('Error!', { description: err.message, position: 'top-center' })
+    }
+  }
+
   return {
     items,
     makes,
@@ -167,5 +193,6 @@ export const useInventoryStore = defineStore('inventory', () => {
     fetchMakes,
     bulkCreateItems,
     updateItem,
+    deleteItem,
   }
 })
