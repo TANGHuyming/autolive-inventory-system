@@ -22,7 +22,7 @@ import { useRouter } from 'vue-router'
 const searchQuery = ref('')
 const router = useRouter()
 const employeeStore = useEmployeeStore()
-const { employees, success, error, loading } = storeToRefs(employeeStore)
+const { employees, loading } = storeToRefs(employeeStore)
 const { fetchEmployees } = employeeStore
 
 const handleSearch = async (e) => {

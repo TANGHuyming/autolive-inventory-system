@@ -259,7 +259,8 @@ const toPayload = (items, location) => {
     formData.append(`items[${index}][make]`, item.make)
     formData.append(`items[${index}][model]`, item.carModel)
     formData.append(`items[${index}][stock_quantity]`, item.itemStockQuantity)
-    formData.append(`items[${index}][item_image]`, item.itemImage)
+
+    if (item.itemImage) formData.append(`items[${index}][item_image]`, item.itemImage)
 
     expandYearRange(item.yearRange).forEach((year, yIndex) => {
       formData.append(`items[${index}][yearRange][${yIndex}]`, year)
@@ -281,7 +282,7 @@ const handleSubmitItems = () => {
     handleResetLocationForm()
     handleResetForm()
     itemsToAssign.value = []
-    fetchItems()
+    fetchItems({}, true) // Fetch up to date items while scout works
   }
 
   showAssignedItems.value = false

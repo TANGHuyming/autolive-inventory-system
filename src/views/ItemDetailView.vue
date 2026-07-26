@@ -26,7 +26,7 @@ import {
 } from '@/components/ui/table'
 import { MapPin, Package, ChevronsUpDown } from '@lucide/vue'
 import { onMounted, ref, computed, onUnmounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useInventoryStore } from '@/stores/InventoryStore'
@@ -35,12 +35,14 @@ import { useWarehouseStore } from '@/stores/WarehouseStore'
 
 const searchQuery = ref('')
 const route = useRoute()
+const router = useRouter()
 const inventoryStore = useInventoryStore()
 const warehouseStore = useWarehouseStore()
 const { item, makes, loading, error } = storeToRefs(inventoryStore)
 const { warehouses } = storeToRefs(warehouseStore)
-const { fetchItemDetails, fetchMakes, updateItem } = inventoryStore
+const { fetchItemDetails, fetchMakes, updateItem, deleteItem } = inventoryStore
 const { fetchWarehouses } = warehouseStore
+const deleteDialogOpen = ref(false)
 
 const warehousePopoverOpen = ref(false)
 const searchWarehouse = ref('')
@@ -254,6 +256,14 @@ const refillForm = () => {
       yearRange: [years[0].year_name, years[years.length - 1].year_name],
       itemImage: null,
     }
+  }
+}
+
+const handleDeleteItem = () => {
+  deleteItem(route.params.itemId)
+  if (!error.value) {
+    deleteDialogOpen.value = false
+    router.push('/items')
   }
 }
 
@@ -723,6 +733,35 @@ onUnmounted(() => {
                     </div>
                   </FieldGroup>
                 </FieldSet>
+              </DialogContent>
+            </Dialog>
+
+            <Dialog v-model:open="deleteDialogOpen">
+              <DialogTrigger asChild>
+                <Button variant="destructive" class="cursor-pointer ml-2">Delete Item</Button>
+              </DialogTrigger>
+
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Are you sure you want to delete this item?</DialogTitle>
+                  <DialogDescription>
+                    This action cannot be undone. This will permanently delete the item from our
+                    database.
+                  </DialogDescription>
+                </DialogHeader>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <Button variant="default" class="cursor-pointer" @click="handleDeleteItem"
+                    >Yes</Button
+                  >
+                  <Button
+                    variant="destructive"
+                    class="cursor-pointer"
+                    @click="() => (deleteDialogOpen = false)"
+                  >
+                    No
+                  </Button>
+                </div>
               </DialogContent>
             </Dialog>
           </div>
