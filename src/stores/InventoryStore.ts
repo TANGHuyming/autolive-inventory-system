@@ -131,6 +131,30 @@ export const useInventoryStore = defineStore('inventory', () => {
     }
   }
 
+  const updateItem = async (itemId: any, payload: any) => {
+    loading.value = true
+    error.value = null
+    try {
+      const response = await apiClient.post(`/inventories/${itemId}`, payload)
+
+      const data = response.data
+
+      if (data.success) {
+        toast.success('Success!', { description: data.message, position: 'top-center' })
+      } else {
+        throw new Error(data.data.length === 0 ? data.message : data.data)
+      }
+    } catch (err) {
+      console.error(err)
+      error.value = {
+        message: err.message,
+      }
+      toast.error('Error!', { description: err.message, position: 'top-center' })
+    } finally {
+      loading.value = false
+    }
+  }
+
   return {
     items,
     makes,
@@ -142,5 +166,6 @@ export const useInventoryStore = defineStore('inventory', () => {
     fetchItemDetails,
     fetchMakes,
     bulkCreateItems,
+    updateItem,
   }
 })

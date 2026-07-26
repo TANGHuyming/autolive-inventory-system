@@ -1,9 +1,9 @@
 <script setup>
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { MoreHorizontal, ChevronsUpDown, Trash2, Image, Pencil, Plus } from '@lucide/vue'
-import { onMounted, ref, watch, computed, onUnmounted } from 'vue'
-import { Field, FieldError, FieldGroup, FieldLabel, FieldSet } from '@/components/ui/field'
+import { onMounted, ref, computed, onUnmounted } from 'vue'
+import { Field, FieldGroup, FieldLabel, FieldSet } from '@/components/ui/field'
 import {
   Table,
   TableBody,
@@ -37,7 +37,7 @@ const searchQuery = ref('')
 const router = useRouter()
 const inventoryStore = useInventoryStore()
 const warehouseStore = useWarehouseStore()
-const { items, makes, loading, success, error } = storeToRefs(inventoryStore)
+const { items, makes, loading, error } = storeToRefs(inventoryStore)
 const { warehouses } = storeToRefs(warehouseStore)
 const { fetchItems, fetchMakes, bulkCreateItems } = inventoryStore
 const { fetchWarehouses } = warehouseStore
@@ -334,7 +334,7 @@ onUnmounted(() => {
             >
           </DialogTrigger>
 
-          <DialogContent class="min-w-[90vw]">
+          <DialogContent class="min-w-[90vw] max-h-[70vh] overflow-auto">
             <DialogHeader>
               <DialogTitle> Add a new item </DialogTitle>
               <DialogDescription>
