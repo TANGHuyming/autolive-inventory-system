@@ -172,8 +172,13 @@ const validateItemFields = (item) => {
     const maxFileSize = 1024 * 1024 * 5 // in 5 MB
     const allowedMimeTypes = ['image/jpg', 'image/jpeg', 'image/png', 'image/avif']
     if (item.itemImage) {
-      if (item.itemImage.size > maxFileSize) throw new Error('File size is too large')
-      if (!allowedMimeTypes.includes(item.itemImage.type)) throw new Error('Invalid mime type')
+      if (item.itemImage.size > maxFileSize) {
+        throw new Error('Image size should not exceed 5MB.')
+      }
+
+      if (!allowedMimeTypes.includes(item.itemImage.type)) {
+        throw new Error('Invalid image format. Allowed formats: jpg, jpeg, png, avif.')
+      }
     }
 
     return true

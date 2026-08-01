@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { apiClient } from '@/api'
+import { toast } from 'vue-sonner'
 
 export const useWarehouseStore = defineStore('warehouse', () => {
   const warehouses = ref([])
@@ -89,6 +90,100 @@ export const useWarehouseStore = defineStore('warehouse', () => {
     }
   }
 
+  const createWarehouse = async (payload: any) => {
+    loading.value = true
+    error.value = null
+    try {
+      const respons = await apiClient.post('/warehouses', payload)
+
+      const data = respons.data
+
+      if (data.success) {
+        toast.success('Success!', {
+          description: data.message || 'Warehouse created successfully.',
+          position: 'top-center',
+        })
+      } else {
+        throw new Error(data.data.length > 0 ? data.data : data.message)
+      }
+      return
+    } catch (err) {
+      console.error(err)
+      error.value = {
+        message: err.message,
+      }
+      toast.error('Error!', {
+        description: err.message,
+        position: 'top-center',
+      })
+    } finally {
+      loading.value = false
+    }
+  }
+
+  const updateWarehouse = async (warehouseId: string, payload: any) => {
+    loading.value = true
+    error.value = null
+    try {
+      const response = await apiClient.put(`/warehouses/${warehouseId}`, payload)
+
+      const data = response.data
+
+      if (data.success) {
+        toast.success('Succes!', {
+          description: data.message || 'Warehouse updated successfully.',
+          position: 'top-center',
+        })
+      } else {
+        throw new Error(data.data.length > 0 ? data.data : data.message)
+      }
+
+      return
+    } catch (err) {
+      console.error(err)
+      error.value = {
+        message: err.message,
+      }
+      toast.error('Error!', {
+        description: err.message,
+        position: 'top-center',
+      })
+    } finally {
+      loading.value = false
+    }
+  }
+
+  const deleteWarehouse = async (warehouseId: string) => {
+    loading.value = true
+    error.value = null
+    try {
+      const response = await apiClient.delete(`/warehouses/${warehouseId}`)
+
+      const data = response.data
+
+      if (data.success) {
+        toast.success('Success!', {
+          description: data.message || 'Warehouse deleted successfully.',
+          position: 'top-center',
+        })
+      } else {
+        throw new Error(data.data.length > 0 ? data.data : data.message)
+      }
+      return
+    } catch (err) {
+      console.error(err)
+      error.value = {
+        message: err.message,
+      }
+      toast.error('Error!', {
+        description: err.message,
+        position: 'top-center',
+      })
+    } finally {
+      loading.value = false
+    }
+  }
+
   return {
     warehouses,
     warehouse,
@@ -97,5 +192,8 @@ export const useWarehouseStore = defineStore('warehouse', () => {
     error,
     fetchWarehouses,
     fetchWarehouseDetails,
+    createWarehouse,
+    updateWarehouse,
+    deleteWarehouse,
   }
 })

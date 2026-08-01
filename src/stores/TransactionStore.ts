@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { apiClient } from '@/api'
+import { toast } from 'vue-sonner'
 
 export const useTransactionStore = defineStore('transaction', () => {
   const transactions = ref([])
@@ -79,6 +80,36 @@ export const useTransactionStore = defineStore('transaction', () => {
     }
   }
 
+  const createTransaction = async (payload: any) => {
+    loading.value = true
+    error.value = null
+
+    try {
+      const response = await apiClient.post('/transactions', payload)
+
+      const data = response.data
+
+      if (data.success) {
+        toast.success('Success!', {
+          description: 'Transaction created successfully',
+          position: 'top-center',
+        })
+      } else {
+        throw new Error(data.message || 'Failed to create transaction')
+      }
+
+      return
+    } catch (err) {
+      console.error(err)
+      error.value = {
+        message: err.message,
+      }
+      toast.error('Error!', { description: err.message, position: 'top-center' })
+    } finally {
+      loading.value = false
+    }
+  }
+
   return {
     transactions,
     transaction,
@@ -87,5 +118,6 @@ export const useTransactionStore = defineStore('transaction', () => {
     loading,
     fetchTransactions,
     fetchTransactionDetail,
+    createTransaction,
   }
 })
