@@ -295,7 +295,7 @@ onMounted(async () => {
 
             <Dialog v-model:open="deleteDialogOpen">
               <DialogTrigger asChild>
-                <Button variant="destructive" class="cursor-pointer ml-2">Delete Employee</Button>
+                <Button variant="destructive" class="cursor-pointer ml-2">Delete Warehouse</Button>
               </DialogTrigger>
 
               <DialogContent>
