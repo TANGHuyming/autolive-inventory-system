@@ -84,7 +84,7 @@ onMounted(async () => {
         <CardTitle>Approved By</CardTitle>
       </CardHeader>
       <CardContent>
-        <div class="flex flex-col sm:flex-row items-center gap-5">
+        <div class="flex flex-row items-center gap-5">
           <Avatar class="w-12 h-12">
             <AvatarImage src="" />
             <AvatarFallback>

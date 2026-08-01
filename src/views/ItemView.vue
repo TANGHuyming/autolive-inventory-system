@@ -5,6 +5,15 @@ import { MoreHorizontal, ChevronsUpDown, Trash2, Image, Pencil, Plus } from '@lu
 import { onMounted, ref, computed, onUnmounted } from 'vue'
 import { Field, FieldGroup, FieldLabel, FieldSet } from '@/components/ui/field'
 import {
+  Pagination,
+  PaginationContent,
+  PaginationPrevious,
+  PaginationNext,
+  PaginationFirst,
+  PaginationLast,
+  PaginationItem,
+} from '@/components/ui/pagination'
+import {
   Table,
   TableBody,
   TableCaption,
@@ -200,6 +209,23 @@ const editItem = (index) => {
 
 const copyItem = (index) => {
   itemForm.value = itemsToAssign.value[index]
+}
+
+const validateLocationForm = () => {
+  try {
+    if (Object.entries(locationForm.value).some(([key, value]) => !value)) {
+      throw new Error('Please fill in all the fields in the location form.')
+    }
+
+    return true
+  } catch (err) {
+    toast.error('Validation failed', {
+      description: err.message,
+      position: 'top-center',
+    })
+
+    return false
+  }
 }
 
 const validateItemFields = (item) => {
@@ -517,8 +543,10 @@ onUnmounted(() => {
                     class="cursor-pointer"
                     @click="
                       () => {
-                        showLocationForm = false
-                        if (!makes || makes.length === 0) fetchMakes()
+                        if (validateLocationForm()) {
+                          showLocationForm = false
+                          if (!makes || makes.length === 0) fetchMakes()
+                        }
                       }
                     "
                   >
@@ -971,6 +999,26 @@ onUnmounted(() => {
           </TableRow>
         </TableBody>
       </Table>
+
+      <Pagination>
+        <PaginationContent>
+          <PaginationFirst asChild>
+            <Button>First</Button>
+          </PaginationFirst>
+
+          <PaginationPrevious asChild>
+            <Button>Previous</Button>
+          </PaginationPrevious>
+
+          <PaginationNext asChild>
+            <Button>Next</Button>
+          </PaginationNext>
+
+          <PaginationLast asChild>
+            <Button>First</Button>
+          </PaginationLast>
+        </PaginationContent>
+      </Pagination>
     </CardContent>
   </Card>
 </template>

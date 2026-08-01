@@ -159,6 +159,67 @@ export const useEmployeeStore = defineStore('employee', () => {
     }
   }
 
+  async function updateEmployee(employeeId: string, payload: any) {
+    loading.value = true
+    error.value = null
+    try {
+      const response = await apiClient.post(`/employees/${employeeId}`, payload)
+
+      const data = response.data
+
+      if (data.success) {
+        toast.success('Success!', {
+          description: data.message || 'Employee information updated successfully',
+          position: 'top-center',
+        })
+      } else {
+        throw new Error(data.data.length !== 0 ? data.data : data.message)
+      }
+
+      return
+    } catch (err) {
+      console.error(err)
+      error.value = {
+        message: err.message,
+      }
+      toast.error('Error!', { description: err.message, position: 'top-center' })
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function deleteEmployee(employeeId: string) {
+    loading.value = true
+    error.value = null
+    try {
+      const response = await apiClient.delete(`/employees/${employeeId}`)
+
+      const data = response.data
+
+      if (data.success) {
+        toast.success('Success!', {
+          description: data.message || 'Employee deleted successfully',
+          position: 'top-center',
+        })
+      } else {
+        throw new Error(data.data.length !== 0 ? data.data : data.message)
+      }
+
+      return
+    } catch (err) {
+      console.error(err)
+      error.value = {
+        message: err.message,
+      }
+      toast.error('Error!', {
+        description: err.message,
+        position: 'top-center',
+      })
+    } finally {
+      loading.value = false
+    }
+  }
+
   return {
     profile,
     employees,
@@ -170,6 +231,8 @@ export const useEmployeeStore = defineStore('employee', () => {
     register,
     fetchEmployees,
     fetchEmployeeDetail,
+    updateEmployee,
+    deleteEmployee,
     me,
   }
 })
