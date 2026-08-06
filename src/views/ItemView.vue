@@ -1,18 +1,10 @@
 <script setup>
+import PaginatorComponent from '@/components/PaginatorComponent.vue'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { MoreHorizontal, ChevronsUpDown, Trash2, Image, Pencil, Plus } from '@lucide/vue'
-import { onMounted, ref, computed, onUnmounted } from 'vue'
+import { onMounted, ref, watch, computed, onUnmounted } from 'vue'
 import { Field, FieldGroup, FieldLabel, FieldSet } from '@/components/ui/field'
-import {
-  Pagination,
-  PaginationContent,
-  PaginationPrevious,
-  PaginationNext,
-  PaginationFirst,
-  PaginationLast,
-  PaginationItem,
-} from '@/components/ui/pagination'
 import {
   Table,
   TableBody,
@@ -38,11 +30,15 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useInventoryStore } from '@/stores/InventoryStore'
 import { storeToRefs } from 'pinia'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useWarehouseStore } from '@/stores/WarehouseStore'
 import { toast } from 'vue-sonner'
 
 const searchQuery = ref('')
+const totalPages = ref(0)
+const currentPage = ref(1)
+const pageSize = ref(10)
+const route = useRoute()
 const router = useRouter()
 const inventoryStore = useInventoryStore()
 const warehouseStore = useWarehouseStore()
@@ -314,8 +310,20 @@ const handleSubmitItems = () => {
   showAssignedItems.value = false
 }
 
-onMounted(() => {
-  fetchItems()
+watch([pageSize], () => {
+  currentPage.value = 1
+})
+
+watch([pageSize, currentPage], () => {
+  fetchItems({
+    pageSize: pageSize.value,
+    currentPage: currentPage.value,
+  })
+})
+
+onMounted(async () => {
+  const result = await fetchItems({})
+  totalPages.value = result.meta.pagination.total_pages
 })
 
 onUnmounted(() => {
@@ -957,6 +965,7 @@ onUnmounted(() => {
         </TableCaption>
         <TableHeader>
           <TableRow class="bg-primary text-primary-foreground hover:bg-primary">
+            <TableHead>No</TableHead>
             <TableHead class="w-30">Item Code</TableHead>
             <TableHead>Item Name</TableHead>
             <TableHead>Make</TableHead>
@@ -974,6 +983,7 @@ onUnmounted(() => {
             class="cursor-pointer"
             @click="goToItem(item.item_id)"
           >
+            <TableCell>{{ item.no }}</TableCell>
             <TableCell class="font-mono text-sm">{{ item.item_code }}</TableCell>
 
             <TableCell>
@@ -1000,25 +1010,12 @@ onUnmounted(() => {
         </TableBody>
       </Table>
 
-      <Pagination>
-        <PaginationContent>
-          <PaginationFirst asChild>
-            <Button>First</Button>
-          </PaginationFirst>
-
-          <PaginationPrevious asChild>
-            <Button>Previous</Button>
-          </PaginationPrevious>
-
-          <PaginationNext asChild>
-            <Button>Next</Button>
-          </PaginationNext>
-
-          <PaginationLast asChild>
-            <Button>First</Button>
-          </PaginationLast>
-        </PaginationContent>
-      </Pagination>
+      <PaginatorComponent
+        :pageSizeOptions="[10, 25, 50, 100]"
+        :totalPages="totalPages"
+        v-model:currentPage="currentPage"
+        v-model:pageSize="pageSize"
+      />
     </CardContent>
   </Card>
 </template>

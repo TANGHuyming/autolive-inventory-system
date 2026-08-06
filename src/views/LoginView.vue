@@ -28,6 +28,7 @@ const password = ref(null)
 const confirmingPassword = ref(null)
 
 const token = ref('')
+const turnstileRef = ref(null)
 const siteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY || ''
 
 const handleLogin = async (event) => {
@@ -41,6 +42,7 @@ const handleLogin = async (event) => {
     email.value = null
     password.value = null
   }
+  turnstileRef.value.reset()
 }
 
 const handleRegister = async (event) => {
@@ -135,7 +137,7 @@ watch(isLogin, () => {
           </Field>
 
           <Field>
-            <VueTurnstile :site-key="siteKey" v-model="token" />
+            <VueTurnstile ref="turnstileRef" :site-key="siteKey" v-model="token" />
             <Button
               variant="default"
               type="submit"

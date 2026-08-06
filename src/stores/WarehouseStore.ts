@@ -6,6 +6,7 @@ import { toast } from 'vue-sonner'
 export const useWarehouseStore = defineStore('warehouse', () => {
   const warehouses = ref([])
   const warehouse = ref()
+  const bay = ref()
   const loading = ref(false)
   const error = ref()
   const success = ref()
@@ -90,6 +91,35 @@ export const useWarehouseStore = defineStore('warehouse', () => {
     }
   }
 
+  const fetchBayDetails = async (bayId: any) => {
+    loading.value = true
+    error.value = null
+    try {
+      const response = await apiClient.get(`/bays/${bayId}`)
+
+      const data = response.data
+
+      if (data.success) {
+        bay.value = data.data
+      } else {
+        throw new Error(data.data.length > 0 ? data.data : data.message)
+      }
+
+      return
+    } catch (err) {
+      console.error(err)
+      error.value = {
+        message: err.message,
+      }
+      toast.error('Error!', {
+        description: err.message,
+        position: 'top-center',
+      })
+    } finally {
+      loading.value = false
+    }
+  }
+
   const createWarehouse = async (payload: any) => {
     loading.value = true
     error.value = null
@@ -153,6 +183,69 @@ export const useWarehouseStore = defineStore('warehouse', () => {
     }
   }
 
+  const updateBay = async (bayId: string, payload: any) => {
+    loading.value = true
+    error.value = null
+    try {
+      const response = await apiClient.put(`/bays/${bayId}`, payload)
+
+      const data = response.data
+
+      if (data.success) {
+        toast.success('Success!', {
+          description: data.message || 'Bay updated successfully.',
+          position: 'top-center',
+        })
+      } else {
+        throw new Error(data.data.length > 0 ? data.data : data.message)
+      }
+
+      return
+    } catch (err) {
+      console.error(err)
+      error.value = {
+        message: err.message,
+      }
+      toast.error('Error!', {
+        description: err.message,
+        position: 'top-center',
+      })
+    } finally {
+      loading.value = false
+    }
+  }
+
+  const deleteBay = async (bayId: string) => {
+    loading.value = true
+    error.value = null
+    try {
+      const response = await apiClient.delete(`/bays/${bayId}`)
+
+      const data = response.data
+
+      if (data.success) {
+        toast.success('Success!', {
+          description: data.message || 'Bay deleted successfully.',
+          position: 'top-center',
+        })
+      } else {
+        throw new Error(data.data.length > 0 ? data.data : data.message)
+      }
+      return
+    } catch (err) {
+      console.error(err)
+      error.value = {
+        message: err.message,
+      }
+      toast.error('Error!', {
+        description: err.message,
+        position: 'top-center',
+      })
+    } finally {
+      loading.value = false
+    }
+  }
+
   const deleteWarehouse = async (warehouseId: string) => {
     loading.value = true
     error.value = null
@@ -184,16 +277,53 @@ export const useWarehouseStore = defineStore('warehouse', () => {
     }
   }
 
+  const createBay = async (payload: any) => {
+    loading.value = true
+    error.value = null
+    try {
+      const response = await apiClient.post(`/bays`, payload)
+
+      const data = response.data
+
+      if (data.success) {
+        toast.success('Success!', {
+          description: data.message || 'Bay created successfully.',
+          position: 'top-center',
+        })
+      } else {
+        throw new Error(data.data.length > 0 ? data.data : data.message)
+      }
+
+      return
+    } catch (err) {
+      console.error(err)
+      error.value = {
+        message: err.message,
+      }
+      toast.error('Error!', {
+        description: err.message,
+        position: 'top-center',
+      })
+    } finally {
+      loading.value = false
+    }
+  }
+
   return {
     warehouses,
     warehouse,
+    bay,
     loading,
     success,
     error,
     fetchWarehouses,
     fetchWarehouseDetails,
+    fetchBayDetails,
     createWarehouse,
+    createBay,
     updateWarehouse,
+    updateBay,
     deleteWarehouse,
+    deleteBay,
   }
 })
