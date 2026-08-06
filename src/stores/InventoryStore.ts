@@ -22,7 +22,10 @@ export const useInventoryStore = defineStore('inventory', () => {
         response = await apiClient.get('/inventories/up-to-date')
       } else {
         response = await apiClient.get('/inventories', {
-          params: params,
+          params: {
+            page: params.currentPage ?? 1,
+            limit: params.pageSize ?? 10,
+          },
         })
       }
 
@@ -33,10 +36,14 @@ export const useInventoryStore = defineStore('inventory', () => {
           message: 'Items fetched successfully',
         }
 
-        items.value = data.data
+        const pagination = data.meta.pagination
+        items.value = data.data.map((i: any, index: number) => ({
+          ...i,
+          no: index + 1 + (pagination.current_page - 1) * pagination.limit,
+        }))
       }
 
-      return
+      return data
     } catch (err) {
       console.error(err)
       error.value = {

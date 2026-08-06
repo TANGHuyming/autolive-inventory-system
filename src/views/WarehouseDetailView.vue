@@ -1,5 +1,5 @@
 <script setup>
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Field, FieldGroup, FieldLabel, FieldSet } from '@/components/ui/field'
@@ -20,22 +20,25 @@ import {
   TableBody,
   TableCell,
 } from '@/components/ui/table'
-import { MapPin } from '@lucide/vue'
+import { MapPin, Trash2 } from '@lucide/vue'
 import { onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useWarehouseStore } from '@/stores/WarehouseStore'
 import { storeToRefs } from 'pinia'
+import { toast } from 'vue-sonner'
 
 const searchQuery = ref('')
 const route = useRoute()
 const router = useRouter()
 const warehouseStore = useWarehouseStore()
 const { warehouse, loading, error } = storeToRefs(warehouseStore)
-const { fetchWarehouseDetails, updateWarehouse, deleteWarehouse } = warehouseStore
+const { fetchWarehouseDetails, updateWarehouse, deleteWarehouse, createBay } = warehouseStore
 
 const showWarehouseForm = ref(false)
+const showBayForm = ref(false)
+const showAssignedShelves = ref(false)
 const deleteDialogOpen = ref(false)
 
 const warehouseForm = ref({
@@ -48,6 +51,11 @@ const warehouseForm = ref({
   houseNumber: '',
 })
 
+const bayForm = ref({
+  bayName: '',
+  shelves: [],
+})
+
 const handleRefillWarehouseForm = () => {
   warehouseForm.value = {
     warehouseName: warehouse.value.warehouse_name || '',
@@ -57,6 +65,45 @@ const handleRefillWarehouseForm = () => {
     village: warehouse.value.village || '',
     street: warehouse.value.street || '',
     houseNumber: warehouse.value.house_number || '',
+  }
+}
+
+const handleResetBayForm = () => {
+  bayForm.value = {
+    ...bayForm.value,
+    bayName: '',
+  }
+}
+
+const handleRemoveShelf = (index) => {
+  bayForm.value.shelves.splice(index, 1)
+}
+
+const validateBayForm = () => {
+  try {
+    if (bayForm.value.bayName.trim().length === 0) {
+      throw new Error('Bay name is required')
+    }
+
+    if (bayForm.value.shelves.length === 0) {
+      throw new Error('At least one shelf is required')
+    }
+
+    if (
+      bayForm.value.shelves.some((shelf) => {
+        return Object.entries(shelf).some(([key, value]) => value.trim().length === 0)
+      })
+    ) {
+      throw new Error('All shelf fields must be filled')
+    }
+
+    return true
+  } catch (err) {
+    toast.error('Validated failed', {
+      description: err.message,
+      position: 'top-center',
+    })
+    return false
   }
 }
 
@@ -76,7 +123,7 @@ const validateWarehouseForm = () => {
   }
 }
 
-const toPayload = (warehouse) => {
+const toWarehousePayload = (warehouse) => {
   return {
     name: warehouse.warehouseName,
     city: warehouse.city,
@@ -88,8 +135,20 @@ const toPayload = (warehouse) => {
   }
 }
 
+const toBayPayload = (bay) => {
+  return {
+    warehouse_id: route.params.warehouseId,
+    name: bay.bayName,
+    shelves: bay.shelves.map((shelf) => {
+      return {
+        name: shelf.shelfName,
+      }
+    }),
+  }
+}
+
 const handleSubmitWarehouseForm = async () => {
-  const payload = toPayload(warehouseForm.value)
+  const payload = toWarehousePayload(warehouseForm.value)
   await updateWarehouse(route.params.warehouseId, payload)
   if (!error.value) {
     showWarehouseForm.value = false
@@ -98,11 +157,27 @@ const handleSubmitWarehouseForm = async () => {
   }
 }
 
+const handleSubmitBayForm = async () => {
+  const payload = toBayPayload(bayForm.value)
+  await createBay(payload)
+  if (!error.value) {
+    showBayForm.value = false
+    handleResetBayForm()
+    await fetchBays(route.params.warehouseId, {})
+  }
+}
+
 const handleDeleteWarehouse = async () => {
   await deleteWarehouse(route.params.warehouseId)
   if (!error.value) {
     router.push('/warehouses')
   }
+}
+
+const handleAddShelf = () => {
+  bayForm.value.shelves.push({
+    shelfName: '',
+  })
 }
 
 const handleSearch = async (e) => {
@@ -336,7 +411,7 @@ onMounted(async () => {
         <CardTitle>Bays</CardTitle>
       </CardHeader>
       <CardContent>
-        <div class="max-w-7xl mx-auto my-5">
+        <div class="flex flex-row flex-wrap justify-between items-center my-5 gap-2">
           <form @submit="handleSearch">
             <Input
               type="text"
@@ -347,6 +422,149 @@ onMounted(async () => {
             />
             <Input type="submit" class="hidden" />
           </form>
+          <Dialog v-model:open="showBayForm">
+            <DialogTrigger asChild>
+              <Button variant="default" class="cursor-pointer"> Add Bay </Button>
+            </DialogTrigger>
+
+            <DialogContent class="min-w-[90vw] max-h-[70vh] overflow-auto">
+              <DialogHeader>
+                <DialogTitle> Add a new bay </DialogTitle>
+                <DialogDescription>
+                  Fill in the form below to add a new bay to the warehouse along with the shelves
+                </DialogDescription>
+              </DialogHeader>
+              <FieldSet>
+                <FieldGroup class="grid grid-cols-1 sm:grid-cols-2 gap-x-2 gap-y-6">
+                  <Field>
+                    <FieldLabel for="bayName">Bay Name</FieldLabel>
+                    <Input
+                      class="text-sm"
+                      id="bayName"
+                      type="text"
+                      placeholder="Enter bay name..."
+                      v-model="bayForm.bayName"
+                      @input:v-model="(e) => (bayForm.bayName = e.target.value)"
+                    />
+                  </Field>
+
+                  <Field class="col-span-full">
+                    <Button type="button" class="cursor-pointer" @click="handleAddShelf">
+                      Add Shelf
+                    </Button>
+
+                    <Table>
+                      <TableHeader>
+                        <TableRow class="bg-primary text-primary-foreground hover:bg-primary">
+                          <TableHead>Shelf Name</TableHead>
+                          <TableHead>Action</TableHead>
+                        </TableRow>
+                      </TableHeader>
+
+                      <TableBody>
+                        <TableRow v-for="(shelf, index) in bayForm.shelves" :key="index">
+                          <TableCell v-for="[key, _] in Object.entries(shelf)" :key="key">
+                            <Input
+                              placeholder="Enter shelf name..."
+                              v-model="shelf.shelfName"
+                              @input:v-model="(e) => (shelf.shelfName = e.target.value)"
+                            />
+                          </TableCell>
+
+                          <TableCell>
+                            <Button
+                              variant="ghost"
+                              class="cursor-pointer text-destructive"
+                              @click="handleRemoveShelf(index)"
+                            >
+                              <Trash2 class="h-4 w-4 text-destructive" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      </TableBody>
+                    </Table>
+                  </Field>
+
+                  <Field class="col-span-full grid grid-cols-1 sm:grid-cols-2">
+                    <Button
+                      class="cursor-pointer"
+                      variant="outline"
+                      @click="handleResetBayForm"
+                      type="button"
+                    >
+                      Reset
+                    </Button>
+                    <Button
+                      variant="default"
+                      type="button"
+                      class="cursor-pointer"
+                      @click="
+                        () => {
+                          if (validateBayForm()) {
+                            showAssignedShelves = true
+                          }
+                        }
+                      "
+                    >
+                      Next
+                    </Button>
+                  </Field>
+                </FieldGroup>
+              </FieldSet>
+            </DialogContent>
+          </Dialog>
+
+          <Dialog v-model:open="showAssignedShelves">
+            <DialogContent class="min-w-[90vw] max-h-[70vh] overflow-auto">
+              <DialogHeader>
+                <DialogTitle> Assigned Shelves </DialogTitle>
+                <DialogDescription class="flex flex-col">
+                  <span>
+                    Please review the shelves you have assigned to the bay before submission
+                  </span>
+                </DialogDescription>
+              </DialogHeader>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Bay Information</CardTitle>
+                  <CardDescription>Information about the bay that you filled</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-muted-foreground">
+                    <h2>Bay: {{ bayForm.bayName }}</h2>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Table>
+                <TableHeader>
+                  <TableRow class="bg-primary text-primary-foreground hover:bg-primary">
+                    <TableHead>Shelf Name</TableHead>
+                  </TableRow>
+                </TableHeader>
+
+                <TableBody>
+                  <TableRow v-for="(shelf, index) in bayForm.shelves" :key="index">
+                    <TableCell>{{ shelf.shelfName }}</TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+
+              <Button
+                variant="default"
+                class="cursor-pointer"
+                @click="
+                  () => {
+                    handleSubmitBayForm()
+                    showAssignedShelves = false
+                  }
+                "
+              >
+                Confirm Submission
+              </Button>
+            </DialogContent>
+          </Dialog>
         </div>
 
         <Table>
@@ -359,7 +577,12 @@ onMounted(async () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            <TableRow v-for="b in warehouse.bays" :key="b.bay_id" class="cursor-pointer">
+            <TableRow
+              v-for="b in warehouse.bays"
+              :key="b.bay_id"
+              class="cursor-pointer"
+              @click="router.push(`/warehouses/${route.params.warehouseId}/bays/${b.bay_id}`)"
+            >
               <TableCell>#{{ b.bay_id }}</TableCell>
               <TableCell>{{ b.bay_name }}</TableCell>
               <TableCell>{{ b.shelf_count }}</TableCell>

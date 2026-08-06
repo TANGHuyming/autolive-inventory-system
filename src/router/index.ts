@@ -71,6 +71,16 @@ const router = createRouter({
           component: () => import('@/views/WarehouseDetailView.vue'),
         },
         {
+          path: '/warehouses/:warehouseId/bays',
+          name: 'Bays',
+          component: () => import('@/views/WarehouseDetailView.vue'),
+        },
+        {
+          path: '/warehouses/:warehouseId/bays/:bayId',
+          name: 'Bay Detail',
+          component: () => import('@/views/BayDetailView.vue'),
+        },
+        {
           path: '/access-denied',
           name: 'Access Denied',
           component: () => import('@/views/AccessDeniedView.vue'),

@@ -13,10 +13,15 @@ export const useNavStore = defineStore('nav', () => {
   ])
   const navItem = ref(route.path)
   const navTitles = computed(() => {
-    const breadcrumbs = route.path.split('/').map((p) => {
+    const paths = route.path.split('/')
+    const breadcrumbs = paths.map((p, index) => {
+      let breadcrumbLocation = ''
+      for (let i = 0; i <= index; i++) {
+        breadcrumbLocation += paths[i] + '/'
+      }
       return {
         name: p.length === 0 ? 'Home' : p[0]?.toUpperCase() + p.slice(1).toLowerCase(),
-        location: `/${p}`,
+        location: breadcrumbLocation.slice(0, -1),
       }
     })
 
