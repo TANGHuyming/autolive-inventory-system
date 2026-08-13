@@ -1,8 +1,9 @@
 <script setup>
 import { Card, CardDescription, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { MoreHorizontal, Plus, Trash2, ChevronsUpDown } from '@lucide/vue'
-import { onMounted, ref, computed } from 'vue'
+import { onMounted, ref, computed, watch } from 'vue'
 import { Calendar } from '@/components/ui/calendar'
+import PaginatorComponent from '@/components/PaginatorComponent.vue'
 import {
   Table,
   TableBody,
@@ -32,12 +33,16 @@ import { useInventoryStore } from '@/stores/InventoryStore'
 import { useWarehouseStore } from '@/stores/WarehouseStore'
 import { useEmployeeStore } from '@/stores/EmployeeStore'
 import { storeToRefs } from 'pinia'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { toast } from 'vue-sonner'
 
 const searchQuery = ref('')
 const itemSearchQuery = ref('')
+const pageSize = ref(10)
+const totalPages = ref(1)
+const currentPage = ref(1)
 const router = useRouter()
+const route = useRoute()
 const transactionStore = useTransactionStore()
 const inventoryStore = useInventoryStore()
 const warehouseStore = useWarehouseStore()
@@ -199,8 +204,12 @@ const removeItem = (itemId) => {
 
 const handleSearch = async (e) => {
   e.preventDefault()
-  await fetchTransactions({
-    searchQuery: searchQuery.value,
+  router.replace({
+    query: {
+      ...route.query,
+      page: 1,
+      searchQuery: !searchQuery.value.trim() ? undefined : searchQuery.value.trim(),
+    },
   })
 }
 
@@ -245,8 +254,32 @@ const handleSubmitTransaction = async () => {
   }
 }
 
-onMounted(async () => {
-  await fetchTransactions()
+async function loadTransactions(params = {}) {
+  try {
+    const result = await fetchTransactions(params)
+    totalPages.value = result.meta.pagination.total_pages ?? 1
+  } catch (err) {
+    console.error(err)
+  }
+}
+
+watch(
+  () => route.query,
+  () => {
+    currentPage.value = parseInt(route.query.page) || 1
+    pageSize.value = parseInt(route.query.limit) || 10
+
+    loadTransactions({
+      ...route.query,
+    })
+  },
+  { deep: true },
+)
+
+onMounted(() => {
+  loadTransactions({
+    ...route.query,
+  })
 })
 </script>
 
@@ -749,6 +782,7 @@ onMounted(async () => {
         <TableCaption>A list of recent warehouse transactions.</TableCaption>
         <TableHeader>
           <TableRow class="bg-primary text-primary-foreground hover:bg-primary">
+            <TableHead>No</TableHead>
             <TableHead>Warehouse</TableHead>
             <TableHead>Approver</TableHead>
             <TableHead>Requester</TableHead>
@@ -765,6 +799,7 @@ onMounted(async () => {
             class="cursor-pointer"
             @click="() => router.push(`/transactions/${transaction.transaction_id}`)"
           >
+            <TableCell>{{ transaction.no }}</TableCell>
             <TableCell>{{ transaction.warehouse.warehouse_name }}</TableCell>
             <TableCell>{{ transaction.approver.employee_name }}</TableCell>
             <TableCell>{{ transaction.requester_name }}</TableCell>
@@ -778,6 +813,12 @@ onMounted(async () => {
           </TableRow>
         </TableBody>
       </Table>
+
+      <PaginatorComponent
+        :totalPages="totalPages"
+        v-model:currentPage="currentPage"
+        v-model:pageSize="pageSize"
+      />
     </CardContent>
   </Card>
 </template>

@@ -5,37 +5,61 @@ import { toast } from 'vue-sonner'
 
 export const useInventoryStore = defineStore('inventory', () => {
   const items = ref([])
+  const itemSummary = ref({})
   const makes = ref([])
   const item = ref()
   const error = ref()
   const loading = ref(false)
   const success = ref()
 
-  const fetchItems = async (params: any, upToDate = false) => {
+  const toItemSummary = (summary) => {
+    const newSummary = Object.entries(summary).map(([key, value]) => {
+      const keyName = key.replace(/_(.)/g, (_, letter) => letter.toUpperCase())
+      return {
+        key: keyName,
+        [keyName]: value,
+      }
+    })
+    return newSummary
+  }
+
+  const fetchItemSummary = async () => {
     loading.value = true
     error.value = null
-    success.value = null
 
     try {
-      let response
-      if (upToDate) {
-        response = await apiClient.get('/inventories/up-to-date')
+      const response = await apiClient.get('/inventories/summary')
+
+      const data = response.data
+
+      if (data.success) {
+        itemSummary.value = toItemSummary(data.data)
       } else {
-        response = await apiClient.get('/inventories', {
-          params: {
-            page: params.currentPage ?? 1,
-            limit: params.pageSize ?? 10,
-          },
-        })
+        throw new Error(data.data.length > 0 ? data.data : data.message)
       }
+
+      return
+    } catch (err) {
+      console.error(err)
+      error.value = {
+        message: err.message,
+      }
+    } finally {
+      loading.value = false
+    }
+  }
+
+  const fetchItems = async (params = {}) => {
+    loading.value = true
+    error.value = null
+
+    try {
+      const response = await apiClient.get('/inventories', {
+        params: params,
+      })
 
       const data = response.data
       if (data.success) {
-        success.value = {
-          success: true,
-          message: 'Items fetched successfully',
-        }
-
         const pagination = data.meta.pagination
         items.value = data.data.map((i: any, index: number) => ({
           ...i,
@@ -47,15 +71,10 @@ export const useInventoryStore = defineStore('inventory', () => {
     } catch (err) {
       console.error(err)
       error.value = {
-        success: false,
         message: err,
       }
     } finally {
       loading.value = false
-      setTimeout(() => {
-        error.value = null
-        success.value = null
-      }, 3000)
     }
   }
 
@@ -190,12 +209,14 @@ export const useInventoryStore = defineStore('inventory', () => {
 
   return {
     items,
+    itemSummary,
     makes,
     item,
     error,
     success,
     loading,
     fetchItems,
+    fetchItemSummary,
     fetchItemDetails,
     fetchMakes,
     bulkCreateItems,

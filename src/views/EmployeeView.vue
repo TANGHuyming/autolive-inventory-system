@@ -2,6 +2,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { MoreHorizontal } from '@lucide/vue'
 import { onMounted, ref, watch } from 'vue'
+import PaginatorComponent from '@/components/PaginatorComponent.vue'
 import {
   Table,
   TableBody,
@@ -17,23 +18,55 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Badge } from '@/components/ui/badge'
 import { useEmployeeStore } from '@/stores/EmployeeStore'
 import { storeToRefs } from 'pinia'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 
 const searchQuery = ref('')
+const route = useRoute()
 const router = useRouter()
+const pageSize = ref(10)
+const currentPage = ref(1)
+const totalPages = ref(1)
 const employeeStore = useEmployeeStore()
 const { employees, loading } = storeToRefs(employeeStore)
 const { fetchEmployees } = employeeStore
 
 const handleSearch = async (e) => {
   e.preventDefault()
-  await fetchEmployees({
-    searchQuery: searchQuery.value,
+  router.push({
+    query: {
+      ...route.query,
+      page: 1,
+      searchQuery: !searchQuery.value.trim() ? undefined : searchQuery.value.trim(),
+    },
   })
 }
 
-onMounted(async () => {
-  await fetchEmployees()
+async function loadEmployees(params = {}) {
+  try {
+    const result = await fetchEmployees(params)
+    totalPages.value = result.meta.pagination.total_pages ?? 1
+  } catch (err) {
+    console.error(err)
+  }
+}
+
+watch(
+  () => route.params,
+  () => {
+    currentPage.value = parseInt(route.query.page) || 1
+    pageSize.value = parseInt(route.query.limit) || 10
+
+    loadEmployees({
+      ...route.query,
+    })
+  },
+  { deep: true },
+)
+
+onMounted(() => {
+  loadEmployees({
+    ...route.query,
+  })
 })
 </script>
 
@@ -61,6 +94,7 @@ onMounted(async () => {
         <TableCaption>A list of employees and their assigned roles.</TableCaption>
         <TableHeader>
           <TableRow class="bg-primary text-primary-foreground hover:bg-primary">
+            <TableHead>No</TableHead>
             <TableHead>Name</TableHead>
             <TableHead>Email</TableHead>
             <TableHead>Telephone</TableHead>
@@ -77,6 +111,7 @@ onMounted(async () => {
             class="cursor-pointer"
             @click="() => router.push(`/employees/${employee.employee_id}`)"
           >
+            <TableCell>{{ employee.no }}</TableCell>
             <TableCell>{{ employee.employee_name }}</TableCell>
             <TableCell>{{ employee.employee_email }}</TableCell>
             <TableCell>{{ employee.employee_telephone }}</TableCell>
@@ -102,6 +137,12 @@ onMounted(async () => {
           </TableRow>
         </TableBody>
       </Table>
+
+      <PaginatorComponent
+        :totalPages="totalPages"
+        v-model:currentPage="currentPage"
+        v-model:pageSize="pageSize"
+      />
     </CardContent>
   </Card>
 </template>

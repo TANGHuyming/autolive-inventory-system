@@ -1,5 +1,5 @@
 <script setup>
-import { defineProps, defineModel, watch, computed } from 'vue'
+import { defineProps, defineModel, watch, computed, onMounted } from 'vue'
 import { Button } from '@/components/ui/button'
 import {
   Select,
@@ -8,13 +8,17 @@ import {
   SelectContent,
   SelectItem,
 } from '@/components/ui/select'
+import { useRoute, useRouter } from 'vue-router'
 
 const props = defineProps({
-  pageSizeOptions: { type: Array, default: [10, 25, 50, 100] },
+  pageSizeOptions: { type: Array, default: [1, 10, 25, 50, 100] },
   totalPages: { type: Number, required: true },
 })
 const currentPage = defineModel('currentPage')
-const pageSize = defineModel('pageSize', { default: 10 })
+const pageSize = defineModel('pageSize')
+
+const route = useRoute()
+const router = useRouter()
 
 function handleFirst() {
   currentPage.value = 1
@@ -28,6 +32,32 @@ function handlePrevious() {
 function handleNext() {
   currentPage.value = Math.min(currentPage.value + 1, props.totalPages)
 }
+
+watch(pageSize, () => {
+  currentPage.value = 1
+})
+
+watch([currentPage, pageSize], () => {
+  router.replace({
+    query: {
+      ...route.query,
+      page: currentPage.value,
+      limit: pageSize.value,
+    },
+  })
+})
+
+onMounted(() => {
+  if (!route.query.page || !route.query.limit) {
+    router.replace({
+      query: {
+        ...route.query,
+        page: currentPage.value,
+        limit: pageSize.value,
+      },
+    })
+  }
+})
 </script>
 
 <template>
