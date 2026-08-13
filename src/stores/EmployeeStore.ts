@@ -114,12 +114,16 @@ export const useEmployeeStore = defineStore('employee', () => {
       const data = response.data
 
       if (data.success) {
-        employees.value = data.data
+        const pagination = data.meta.pagination
+        employees.value = data.data.map((e: any, index: number) => ({
+          ...e,
+          no: index + 1 + (pagination.current_page - 1) * pagination.limit,
+        }))
       } else {
         throw new Error(data.data.length !== 0 ? data.data : data.message)
       }
 
-      return
+      return data
     } catch (err) {
       console.error(err)
       error.value = {

@@ -138,8 +138,12 @@ const showAssignedItems = ref(false)
 
 const handleSearch = async (e) => {
   e.preventDefault()
-  await fetchItems({
-    searchQuery: searchQuery.value,
+  router.replace({
+    query: {
+      ...route.query,
+      page: 1,
+      searchQuery: !searchQuery.value.trim() ? undefined : searchQuery.value.trim(),
+    },
   })
 }
 
@@ -310,20 +314,32 @@ const handleSubmitItems = () => {
   showAssignedItems.value = false
 }
 
-watch([pageSize], () => {
-  currentPage.value = 1
-})
+async function loadItems(params = {}) {
+  try {
+    const result = await fetchItems(params)
+    totalPages.value = result.meta.pagination.total_pages ?? 1
+  } catch (err) {
+    console.error(err)
+  }
+}
 
-watch([pageSize, currentPage], () => {
-  fetchItems({
-    pageSize: pageSize.value,
-    currentPage: currentPage.value,
+watch(
+  () => route.params,
+  () => {
+    currentPage.value = parseInt(route.query.page) || 1
+    pageSize.value = parseInt(route.query.limit) || 10
+
+    loadItems({
+      ...route.query,
+    })
+  },
+  { deep: true },
+)
+
+onMounted(() => {
+  loadItems({
+    ...route.query,
   })
-})
-
-onMounted(async () => {
-  const result = await fetchItems({})
-  totalPages.value = result.meta.pagination.total_pages
 })
 
 onUnmounted(() => {
@@ -1011,7 +1027,6 @@ onUnmounted(() => {
       </Table>
 
       <PaginatorComponent
-        :pageSizeOptions="[10, 25, 50, 100]"
         :totalPages="totalPages"
         v-model:currentPage="currentPage"
         v-model:pageSize="pageSize"

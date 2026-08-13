@@ -13,9 +13,7 @@ export const useWarehouseStore = defineStore('warehouse', () => {
 
   const fetchWarehouses = async (params: any) => {
     loading.value = true
-    warehouses.value = []
     error.value = null
-    success.value = null
 
     try {
       const response = await apiClient.get('/warehouses', {
@@ -25,29 +23,23 @@ export const useWarehouseStore = defineStore('warehouse', () => {
       const data = response.data
 
       if (data.success) {
-        success.value = {
-          success: true,
-          message: data.message,
-        }
-
-        warehouses.value = data.data
+        const pagination = data.meta.pagination
+        warehouses.value = data.data.map((w: any, index: number) => ({
+          ...w,
+          no: index + 1 + (pagination.current_page - 1) * pagination.limit,
+        }))
       } else {
         throw new Error(data.data || data.message)
       }
 
-      return
+      return data
     } catch (err) {
       console.error(err)
       error.value = {
-        success: false,
         message: err.message,
       }
     } finally {
       loading.value = false
-      setTimeout(() => {
-        error.value = null
-        success.value = null
-      }, 3000)
     }
   }
 

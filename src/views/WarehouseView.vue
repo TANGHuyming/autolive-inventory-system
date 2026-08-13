@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { MoreHorizontal } from '@lucide/vue'
 import { onMounted, ref, watch } from 'vue'
 import { Field, FieldGroup, FieldLabel, FieldSet } from '@/components/ui/field'
+import PaginatorComponent from '@/components/PaginatorComponent.vue'
 import {
   Dialog,
   DialogContent,
@@ -25,10 +26,14 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useWarehouseStore } from '@/stores/WarehouseStore'
 import { storeToRefs } from 'pinia'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { toast } from 'vue-sonner'
 
 const searchQuery = ref('')
+const currentPage = ref(1)
+const totalPages = ref(1)
+const pageSize = ref(10)
+const route = useRoute()
 const router = useRouter()
 const warehouseStore = useWarehouseStore()
 const { warehouses, loading, error } = storeToRefs(warehouseStore)
@@ -98,8 +103,12 @@ const handleSubmitWarehouseForm = async () => {
 
 const handleSearch = async (e) => {
   e.preventDefault()
-  await fetchWarehouses({
-    searchQuery: searchQuery.value,
+  router.push({
+    query: {
+      ...route.query,
+      page: 1,
+      searchQuery: !searchQuery.value.trim() ? undefined : searchQuery.value.trim(),
+    },
   })
 }
 
@@ -107,8 +116,32 @@ const goToWarehouse = (value) => {
   router.push(`/warehouses/${value}`)
 }
 
-onMounted(async () => {
-  await fetchWarehouses()
+async function loadWarehouses(params = {}) {
+  try {
+    const result = await fetchWarehouses(params)
+    totalPages.value = result.meta.pagination.total_pages ?? 1
+  } catch (err) {
+    console.error(err)
+  }
+}
+
+watch(
+  () => route.params,
+  () => {
+    currentPage.value = parseInt(route.query.page) || 1
+    pageSize.value = parseInt(route.query.limit) || 10
+
+    loadWarehouses({
+      ...route.query,
+    })
+  },
+  { deep: true },
+)
+
+onMounted(() => {
+  loadWarehouses({
+    ...route.query,
+  })
 })
 </script>
 
@@ -273,6 +306,7 @@ onMounted(async () => {
         <TableCaption> A list of all available warehouses </TableCaption>
         <TableHeader>
           <TableRow class="bg-primary text-primary-foreground hover:bg-primary">
+            <TableHead>No</TableHead>
             <TableHead class="w-30">Warehouse Name</TableHead>
             <TableHead>City</TableHead>
             <TableHead>District</TableHead>
@@ -290,6 +324,7 @@ onMounted(async () => {
             class="cursor-pointer"
             @click="goToWarehouse(warehouse.warehouse_id)"
           >
+            <TableCell>{{ warehouse.no }}</TableCell>
             <TableCell>
               <div class="font-medium">{{ warehouse.warehouse_name }}</div>
               <div v-if="warehouse.warehouse_name_khmer" class="text-sm text-muted-foreground">
@@ -315,6 +350,12 @@ onMounted(async () => {
           </TableRow>
         </TableBody>
       </Table>
+
+      <PaginatorComponent
+        :totalPages="totalPages"
+        v-model:currentPage="currentPage"
+        v-model:pageSize="pageSize"
+      />
     </CardContent>
   </Card>
 </template>
