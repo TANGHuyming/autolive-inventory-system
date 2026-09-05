@@ -13,7 +13,7 @@ import { useEmployeeStore } from '@/stores/EmployeeStore'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import VueTurnstile from 'vue-turnstile'
-import { webClient } from '@/api'
+// import { webClient } from '@/api'
 
 const employeeStore = useEmployeeStore()
 const { error, loading } = storeToRefs(employeeStore)
@@ -80,28 +80,28 @@ watch(isLogin, () => {
   password.value = null
   confirmingPassword.value = null
 })
-
-function initTheme() {
-  const saved = localStorage.getItem('theme')
-  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-  if (saved === 'dark' || (!saved && prefersDark)) {
-    document.documentElement.classList.add('dark')
-  }
-}
-
-// set csrf token
-async function initCsrf() {
-  try {
-    await webClient.get('sanctum/csrf-cookie')
-
-    return
-  } catch (err) {
-    console.error(err.message)
-  }
-}
-
-initTheme()
-initCsrf()
+//
+// function initTheme() {
+//   const saved = localStorage.getItem('theme')
+//   const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+//   if (saved === 'dark' || (!saved && prefersDark)) {
+//     document.documentElement.classList.add('dark')
+//   }
+// }
+//
+// // set csrf token
+// async function initCsrf() {
+//   try {
+//     await webClient.get('sanctum/csrf-cookie')
+//
+//     return
+//   } catch (err) {
+//     console.error(err.message)
+//   }
+// }
+//
+// initTheme()
+// initCsrf()
 </script>
 
 <template>
