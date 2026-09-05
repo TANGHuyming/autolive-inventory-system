@@ -81,6 +81,11 @@ const router = createRouter({
           component: () => import('@/views/BayDetailView.vue'),
         },
         {
+          path: '/profile',
+          name: 'Profile Detail',
+          component: () => import('@/views/ProfileDetailView.vue'),
+        },
+        {
           path: '/access-denied',
           name: 'Access Denied',
           component: () => import('@/views/AccessDeniedView.vue'),

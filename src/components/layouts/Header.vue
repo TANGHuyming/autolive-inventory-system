@@ -162,7 +162,12 @@ onMounted(() => {
             </DropdownMenuTrigger>
 
             <DropdownMenuContent>
-              <Button variant="outline" class="w-full cursor-pointer">Profile</Button>
+              <Button
+                variant="outline"
+                class="w-full cursor-pointer"
+                @click="router.push('/profile')"
+                >Profile</Button
+              >
               <Button @click="logout" variant="destructive" class="w-full cursor-pointer"
                 >Logout</Button
               >

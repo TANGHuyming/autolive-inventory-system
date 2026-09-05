@@ -71,8 +71,8 @@ export const useEmployeeStore = defineStore('employee', () => {
     }
   }
 
-  async function me() {
-    if (profile.value !== null) {
+  async function me(forceRefresh = false) {
+    if (profile.value !== null && !forceRefresh) {
       return profile.value
     }
 

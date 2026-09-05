@@ -65,9 +65,18 @@ onMounted(async () => {
   <div v-else class="max-w-7xl mx-auto overflow-scroll my-5 space-y-4">
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
       <Card>
-        <CardHeader>
-          <CardTitle>Transactions</CardTitle>
-          <CardDescription>all previous transactions</CardDescription>
+        <CardHeader class="flex flex-col sm:flex-row justify-between items-start">
+          <div>
+            <CardTitle>Transactions</CardTitle>
+            <CardDescription> all previous transactions </CardDescription>
+          </div>
+          <Button
+            variant="ghost"
+            @click="router.push('/transactions')"
+            class="cursor-pointer hover:underline"
+          >
+            View More
+          </Button>
         </CardHeader>
 
         <CardContent>
@@ -92,9 +101,19 @@ onMounted(async () => {
       </Card>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Inventory</CardTitle>
-          <CardDescription>Current inventory</CardDescription>
+        <CardHeader class="flex flex-col sm:flex-row justify-between items-start">
+          <div>
+            <CardTitle>Inventory</CardTitle>
+            <CardDescription>Current inventory</CardDescription>
+          </div>
+
+          <Button
+            variant="ghost"
+            @click="router.push('/items')"
+            class="cursor-pointer hover:underline"
+          >
+            View More
+          </Button>
         </CardHeader>
 
         <CardContent>

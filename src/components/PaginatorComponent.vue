@@ -80,10 +80,18 @@ onMounted(() => {
     </Select>
 
     <div class="flex gap-2">
-      <Button @click="handleFirst" class="cursor-pointer"> First </Button>
-      <Button @click="handlePrevious" class="cursor-pointer">Previous</Button>
-      <Button @click="handleNext" class="cursor-pointer">Next</Button>
-      <Button @click="handleLast" class="cursor-pointer">Last</Button>
+      <Button @click="handleFirst" class="cursor-pointer" :disabled="currentPage === 1">
+        First
+      </Button>
+      <Button @click="handlePrevious" class="cursor-pointer" :disabled="currentPage === 1"
+        >Previous</Button
+      >
+      <Button @click="handleNext" class="cursor-pointer" :disabled="currentPage === totalPages"
+        >Next</Button
+      >
+      <Button @click="handleLast" class="cursor-pointer" :disabled="currentPage === totalPages"
+        >Last</Button
+      >
     </div>
 
     <p>{{ currentPage }} of {{ totalPages }}</p>
