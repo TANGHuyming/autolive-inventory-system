@@ -2,7 +2,6 @@
 import 'vue-sonner/style.css'
 import { Toaster } from '@/components/ui/sonner'
 import { webClient } from './api'
-import { onMounted } from 'vue'
 
 function initTheme() {
   const saved = localStorage.getItem('theme')
@@ -23,10 +22,8 @@ async function initCsrf() {
   }
 }
 
-onMounted(async () => {
-  initTheme()
-  await initCsrf()
-})
+initTheme()
+initCsrf()
 </script>
 
 <template>

@@ -2,7 +2,6 @@
 import {
   Field,
   FieldDescription,
-  FieldError,
   FieldGroup,
   FieldLabel,
   FieldSet,
@@ -80,6 +79,28 @@ watch(isLogin, () => {
   password.value = null
   confirmingPassword.value = null
 })
+
+function initTheme() {
+  const saved = localStorage.getItem('theme')
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+  if (saved === 'dark' || (!saved && prefersDark)) {
+    document.documentElement.classList.add('dark')
+  }
+}
+
+// set csrf token
+async function initCsrf() {
+  try {
+    await webClient.get('sanctum/csrf-cookie')
+
+    return
+  } catch (err) {
+    console.error(err.message)
+  }
+}
+
+initTheme()
+initCsrf()
 </script>
 
 <template>
