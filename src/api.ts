@@ -11,7 +11,7 @@ export const webClient = axios.create({
 })
 
 export const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_PRODUCTION_URL || 'http://localhost:8000/api',
+  baseURL: `${import.meta.env.VITE_PRODUCTION_URL || 'http://localhost:8000'}/api`,
   withCredentials: true,
   withXSRFToken: true,
   headers: {
