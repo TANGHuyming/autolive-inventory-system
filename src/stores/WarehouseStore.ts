@@ -33,7 +33,7 @@ export const useWarehouseStore = defineStore('warehouse', () => {
       }
 
       return data
-    } catch (err) {
+    } catch (err: any) {
       console.error(err)
       error.value = {
         message: err.message,
@@ -68,7 +68,7 @@ export const useWarehouseStore = defineStore('warehouse', () => {
       }
 
       return
-    } catch (err) {
+    } catch (err: any) {
       console.error(err)
       error.value = {
         success: false,
@@ -98,7 +98,7 @@ export const useWarehouseStore = defineStore('warehouse', () => {
       }
 
       return
-    } catch (err) {
+    } catch (err: any) {
       console.error(err)
       error.value = {
         message: err.message,
@@ -129,7 +129,7 @@ export const useWarehouseStore = defineStore('warehouse', () => {
         throw new Error(data.data.length > 0 ? data.data : data.message)
       }
       return
-    } catch (err) {
+    } catch (err: any) {
       console.error(err)
       error.value = {
         message: err.message,
@@ -161,7 +161,7 @@ export const useWarehouseStore = defineStore('warehouse', () => {
       }
 
       return
-    } catch (err) {
+    } catch (err: any) {
       console.error(err)
       error.value = {
         message: err.message,
@@ -193,7 +193,7 @@ export const useWarehouseStore = defineStore('warehouse', () => {
       }
 
       return
-    } catch (err) {
+    } catch (err: any) {
       console.error(err)
       error.value = {
         message: err.message,
@@ -224,7 +224,7 @@ export const useWarehouseStore = defineStore('warehouse', () => {
         throw new Error(data.data.length > 0 ? data.data : data.message)
       }
       return
-    } catch (err) {
+    } catch (err: any) {
       console.error(err)
       error.value = {
         message: err.message,
@@ -255,7 +255,7 @@ export const useWarehouseStore = defineStore('warehouse', () => {
         throw new Error(data.data.length > 0 ? data.data : data.message)
       }
       return
-    } catch (err) {
+    } catch (err: any) {
       console.error(err)
       error.value = {
         message: err.message,
@@ -287,7 +287,7 @@ export const useWarehouseStore = defineStore('warehouse', () => {
       }
 
       return
-    } catch (err) {
+    } catch (err: any) {
       console.error(err)
       error.value = {
         message: err.message,

@@ -2,7 +2,7 @@ import axios from 'axios'
 import router from '@/router'
 
 export const webClient = axios.create({
-  baseURL: 'http://localhost:8000/',
+  baseURL: import.meta.env.VITE_PRODUCTION_URL || 'http://localhost:8000/',
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',

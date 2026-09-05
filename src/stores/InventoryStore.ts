@@ -12,7 +12,7 @@ export const useInventoryStore = defineStore('inventory', () => {
   const loading = ref(false)
   const success = ref()
 
-  const toItemSummary = (summary) => {
+  const toItemSummary = (summary: any) => {
     const newSummary = Object.entries(summary).map(([key, value]) => {
       const keyName = key.replace(/_(.)/g, (_, letter) => letter.toUpperCase())
       return {
@@ -39,7 +39,7 @@ export const useInventoryStore = defineStore('inventory', () => {
       }
 
       return
-    } catch (err) {
+    } catch (err: any) {
       console.error(err)
       error.value = {
         message: err.message,
@@ -103,7 +103,7 @@ export const useInventoryStore = defineStore('inventory', () => {
       }
 
       return
-    } catch (err) {
+    } catch (err: any) {
       console.error(err)
       error.value = {
         success: false,
@@ -130,7 +130,7 @@ export const useInventoryStore = defineStore('inventory', () => {
       }
 
       return
-    } catch (err) {
+    } catch (err: any) {
       console.error(err)
       error.value = {
         message: err.message,
@@ -152,7 +152,7 @@ export const useInventoryStore = defineStore('inventory', () => {
       } else {
         throw new Error(data.data.length === 0 ? data.message : data.data)
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err)
       error.value = {
         message: err.message,
@@ -176,7 +176,7 @@ export const useInventoryStore = defineStore('inventory', () => {
       } else {
         throw new Error(data.data.length === 0 ? data.message : data.data)
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err)
       error.value = {
         message: err.message,
@@ -198,7 +198,7 @@ export const useInventoryStore = defineStore('inventory', () => {
       } else {
         throw new Error(data.data.length === 0 ? data.message : data.data)
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err)
       error.value = {
         message: err.message,

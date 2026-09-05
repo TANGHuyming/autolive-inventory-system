@@ -34,7 +34,7 @@ export const useEmployeeStore = defineStore('employee', () => {
       router.push('/')
 
       return
-    } catch (err) {
+    } catch (err: any) {
       console.error(err)
       error.value = {
         message: err,
@@ -60,7 +60,7 @@ export const useEmployeeStore = defineStore('employee', () => {
       }
 
       return
-    } catch (err) {
+    } catch (err: any) {
       console.error(err)
       error.value = {
         message: err.message,
@@ -86,7 +86,7 @@ export const useEmployeeStore = defineStore('employee', () => {
       }
 
       return
-    } catch (err) {
+    } catch (err: any) {
       console.error(err)
       profile.value = null
     }
@@ -95,7 +95,7 @@ export const useEmployeeStore = defineStore('employee', () => {
   async function logout() {
     try {
       await apiClient.get('/auth/logout')
-    } catch (err) {
+    } catch (err: any) {
       console.error(err)
     } finally {
       profile.value = null
@@ -124,7 +124,7 @@ export const useEmployeeStore = defineStore('employee', () => {
       }
 
       return data
-    } catch (err) {
+    } catch (err: any) {
       console.error(err)
       error.value = {
         message: err,
@@ -152,7 +152,7 @@ export const useEmployeeStore = defineStore('employee', () => {
       }
 
       return
-    } catch (err) {
+    } catch (err: any) {
       console.error(err)
       error.value = {
         message: err,
@@ -181,7 +181,7 @@ export const useEmployeeStore = defineStore('employee', () => {
       }
 
       return
-    } catch (err) {
+    } catch (err: any) {
       console.error(err)
       error.value = {
         message: err.message,
@@ -210,7 +210,7 @@ export const useEmployeeStore = defineStore('employee', () => {
       }
 
       return
-    } catch (err) {
+    } catch (err: any) {
       console.error(err)
       error.value = {
         message: err.message,

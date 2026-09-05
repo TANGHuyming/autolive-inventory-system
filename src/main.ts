@@ -22,7 +22,7 @@ async function initCsrf() {
     await webClient.get('sanctum/csrf-cookie')
 
     return
-  } catch (err) {
+  } catch (err: any) {
     console.error(err.message)
   }
 }

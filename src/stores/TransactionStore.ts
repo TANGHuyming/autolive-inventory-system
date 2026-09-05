@@ -38,7 +38,7 @@ export const useTransactionStore = defineStore('transaction', () => {
       }
 
       return
-    } catch (err) {
+    } catch (err: any) {
       console.error(err)
       error.value = {
         message: err.message,
@@ -76,7 +76,7 @@ export const useTransactionStore = defineStore('transaction', () => {
     }
   }
 
-  const fetchTransactionDetail = async (transactionId, params: any) => {
+  const fetchTransactionDetail = async (transactionId: any, params: any) => {
     loading.value = true
     error.value = null
     success.value = null
@@ -130,7 +130,7 @@ export const useTransactionStore = defineStore('transaction', () => {
       }
 
       return
-    } catch (err) {
+    } catch (err: any) {
       console.error(err)
       error.value = {
         message: err.message,

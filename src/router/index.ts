@@ -125,8 +125,9 @@ router.beforeEach(async (to) => {
   }
 
   if (to.meta.permission) {
-    const permissions = to.meta.permission.split('.')
-    if (!employeeStore.profile || !permissions.includes(employeeStore.profile.role.role_name)) {
+    const permissions = JSON.stringify(to.meta.permission).split('.')
+    const profile = employeeStore.profile || { role: { role_name: '' } }
+    if (!permissions.includes(profile.role.role_name)) {
       return '/access-denied'
     }
   }
