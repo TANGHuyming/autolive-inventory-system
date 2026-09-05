@@ -90,9 +90,9 @@ function initTheme() {
 }
 
 // set csrf token
-function initCsrf() {
+async function initCsrf() {
   try {
-    webClient.get('sanctum/csrf-cookie')
+    await webClient.get('sanctum/csrf-cookie')
 
     return
   } catch (err) {
