@@ -2,6 +2,7 @@
 import 'vue-sonner/style.css'
 import { Toaster } from '@/components/ui/sonner'
 import { webClient } from './api'
+import { onMounted } from 'vue'
 
 function initTheme() {
   const saved = localStorage.getItem('theme')
@@ -10,7 +11,6 @@ function initTheme() {
     document.documentElement.classList.add('dark')
   }
 }
-initTheme()
 
 // set csrf token
 async function initCsrf() {
@@ -22,7 +22,11 @@ async function initCsrf() {
     console.error(err.message)
   }
 }
-initCsrf()
+
+onMounted(async () => {
+  initTheme()
+  await initCsrf()
+})
 </script>
 
 <template>
