@@ -22,18 +22,21 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useInventoryStore } from '@/stores/InventoryStore'
 import { useTransactionStore } from '@/stores/TransactionStore'
+import { useEmployeeStore } from '@/stores/EmployeeStore'
 import { storeToRefs } from 'pinia'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
 const inventoryStore = useInventoryStore()
 const transactionStore = useTransactionStore()
+const employeeStore = useEmployeeStore()
 const { items, itemSummary, loading: loadingItem } = storeToRefs(inventoryStore)
 const {
   transactions,
   transactionSummary,
   loading: loadingTransaction,
 } = storeToRefs(transactionStore)
+const { profile } = storeToRefs(employeeStore)
 const { fetchItems, fetchItemSummary } = inventoryStore
 const { fetchTransactions, fetchTransactionSummary } = transactionStore
 const transactionChartConfig = {
@@ -47,6 +50,11 @@ const itemChartConfig = {
     label: 'TotalCount',
     color: 'var(--primary)',
   },
+}
+
+function isAdmin(profile) {
+  const whiteListRoles = ['admin', 'super_admin']
+  return profile && whiteListRoles.includes(profile.role.role_name.trim().toLowerCase())
 }
 
 onMounted(async () => {
@@ -64,7 +72,7 @@ onMounted(async () => {
 
   <div v-else class="max-w-7xl mx-auto overflow-scroll my-5 space-y-4">
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-      <Card>
+      <Card v-if="isAdmin(profile)">
         <CardHeader class="flex flex-col sm:flex-row justify-between items-start">
           <div>
             <CardTitle>Transactions</CardTitle>
@@ -137,88 +145,92 @@ onMounted(async () => {
       </Card>
     </div>
 
-    <Button class="cursor-pointer" variant="outline" @click="router.push('/transactions')">
-      View More
-    </Button>
-    <Table>
-      <TableHeader>
-        <TableRow class="bg-primary text-primary-foreground hover:bg-primary">
-          <TableHead>No</TableHead>
-          <TableHead>Warehouse</TableHead>
-          <TableHead>Approver</TableHead>
-          <TableHead>Requester</TableHead>
-          <TableHead>Telephone</TableHead>
-          <TableHead>Transaction Date</TableHead>
-          <TableHead class="text-right">Actions</TableHead>
-        </TableRow>
-      </TableHeader>
+    <div v-if="isAdmin(profile)">
+      <Button class="cursor-pointer" variant="outline" @click="router.push('/transactions')">
+        View More
+      </Button>
+      <Table>
+        <TableHeader>
+          <TableRow class="bg-primary text-primary-foreground hover:bg-primary">
+            <TableHead>No</TableHead>
+            <TableHead>Warehouse</TableHead>
+            <TableHead>Approver</TableHead>
+            <TableHead>Requester</TableHead>
+            <TableHead>Telephone</TableHead>
+            <TableHead>Transaction Date</TableHead>
+            <TableHead class="text-right">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
 
-      <TableBody>
-        <TableRow
-          v-for="transaction in transactions"
-          :key="transaction.transaction_id"
-          class="cursor-pointer"
-          @click="() => router.push(`/transactions/${transaction.transaction_id}`)"
-        >
-          <TableCell>{{ transaction.no }}</TableCell>
-          <TableCell>{{ transaction.warehouse.warehouse_name }}</TableCell>
-          <TableCell>{{ transaction.approver.employee_name }}</TableCell>
-          <TableCell>{{ transaction.requester_name }}</TableCell>
-          <TableCell>{{ transaction.telephone }}</TableCell>
-          <TableCell>{{ transaction.transaction_date }}</TableCell>
-          <TableCell class="text-right">
-            <Button variant="ghost" size="icon">
-              <MoreHorizontal class="size-4" />
-            </Button>
-          </TableCell>
-        </TableRow>
-      </TableBody>
-    </Table>
+        <TableBody>
+          <TableRow
+            v-for="transaction in transactions"
+            :key="transaction.transaction_id"
+            class="cursor-pointer"
+            @click="() => router.push(`/transactions/${transaction.transaction_id}`)"
+          >
+            <TableCell>{{ transaction.no }}</TableCell>
+            <TableCell>{{ transaction.warehouse.warehouse_name }}</TableCell>
+            <TableCell>{{ transaction.approver.employee_name }}</TableCell>
+            <TableCell>{{ transaction.requester_name }}</TableCell>
+            <TableCell>{{ transaction.telephone }}</TableCell>
+            <TableCell>{{ transaction.transaction_date }}</TableCell>
+            <TableCell class="text-right">
+              <Button variant="ghost" size="icon">
+                <MoreHorizontal class="size-4" />
+              </Button>
+            </TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>
+    </div>
 
-    <Button class="cursor-pointer" variant="outline" @click="router.push('/items')">
-      View More
-    </Button>
-    <Table>
-      <TableHeader>
-        <TableRow class="bg-primary text-primary-foreground hover:bg-primary">
-          <TableHead>No</TableHead>
-          <TableHead class="w-30">Item Code</TableHead>
-          <TableHead>Item Name</TableHead>
-          <TableHead>Make</TableHead>
-          <TableHead>Model</TableHead>
-          <TableHead class="w-20">Year</TableHead>
-          <TableHead>Origin</TableHead>
-          <TableHead class="text-right">Actions</TableHead>
-        </TableRow>
-      </TableHeader>
+    <div>
+      <Button class="cursor-pointer" variant="outline" @click="router.push('/items')">
+        View More
+      </Button>
+      <Table>
+        <TableHeader>
+          <TableRow class="bg-primary text-primary-foreground hover:bg-primary">
+            <TableHead>No</TableHead>
+            <TableHead class="w-30">Item Code</TableHead>
+            <TableHead>Item Name</TableHead>
+            <TableHead>Make</TableHead>
+            <TableHead>Model</TableHead>
+            <TableHead class="w-20">Year</TableHead>
+            <TableHead>Origin</TableHead>
+            <TableHead class="text-right">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
 
-      <TableBody>
-        <TableRow v-for="item in items" :key="item.item_code" class="cursor-pointer">
-          <TableCell>{{ item.no }}</TableCell>
-          <TableCell class="font-mono text-sm">{{ item.item_code }}</TableCell>
+        <TableBody>
+          <TableRow v-for="item in items" :key="item.item_code" class="cursor-pointer">
+            <TableCell>{{ item.no }}</TableCell>
+            <TableCell class="font-mono text-sm">{{ item.item_code }}</TableCell>
 
-          <TableCell>
-            <div class="font-medium">{{ item.item_name_en }}</div>
-            <div v-if="item.item_name_kh" class="text-sm text-muted-foreground">
-              {{ item.item_name_kh }}
-            </div>
-          </TableCell>
+            <TableCell>
+              <div class="font-medium">{{ item.item_name_en }}</div>
+              <div v-if="item.item_name_kh" class="text-sm text-muted-foreground">
+                {{ item.item_name_kh }}
+              </div>
+            </TableCell>
 
-          <TableCell>{{ item.item_year[0]?.car_model.make.make_name }}</TableCell>
+            <TableCell>{{ item.item_year[0]?.car_model.make.make_name }}</TableCell>
 
-          <TableCell>{{ item.item_year[0]?.car_model.car_model_name }}</TableCell>
+            <TableCell>{{ item.item_year[0]?.car_model.car_model_name }}</TableCell>
 
-          <TableCell>{{ item.item_year[0]?.year_name }}</TableCell>
+            <TableCell>{{ item.item_year[0]?.year_name }}</TableCell>
 
-          <TableCell>{{ item.item_year[0]?.car_model.make.make_country_of_origin }}</TableCell>
+            <TableCell>{{ item.item_year[0]?.car_model.make.make_country_of_origin }}</TableCell>
 
-          <TableCell class="text-right">
-            <Button variant="ghost" size="icon">
-              <MoreHorizontal class="size-4" />
-            </Button>
-          </TableCell>
-        </TableRow>
-      </TableBody>
-    </Table>
+            <TableCell class="text-right">
+              <Button variant="ghost" size="icon">
+                <MoreHorizontal class="size-4" />
+              </Button>
+            </TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>
+    </div>
   </div>
 </template>

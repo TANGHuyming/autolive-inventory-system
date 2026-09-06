@@ -106,25 +106,23 @@ watch(isLogin, () => {
 
 <template>
   <div class="min-h-screen grid grid-cols-1 lg:grid-cols-2">
-    <div
-      class="bg-sidebar lg:flex flex-col justify-center items-center p-16 text-center gap-y-2 hidden"
-    >
+    <div class="bg-sidebar flex flex-col justify-center items-center p-16 text-center gap-y-2 my-5">
       <img
         src="../../public/frontGate.png"
         alt="picture of autolive entrance"
-        class="w-90 h-90 rounded-full"
+        class="w-50 h-50 lg:w-90 lg:h-90 rounded-full"
       />
-      <h2 class="text-5xl text-sidebar-foreground font-bold">
+      <h2 class="text-3xl lg:text-5xl text-sidebar-foreground font-bold">
         Autolive Inventory Management System
       </h2>
-      <p class="text-2xl text-sidebar-primary font-bold">
+      <p class="text-xl lg:text-2xl text-sidebar-primary font-bold">
         Genuine spareparts and vehicle repairing service
       </p>
     </div>
 
     <form
       @submit="handleLogin"
-      class="bg-background flex flex-col justify-center items-center"
+      class="bg-background flex flex-col justify-center items-center my-5"
       v-if="isLogin"
     >
       <FieldSet>

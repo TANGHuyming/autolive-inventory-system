@@ -143,7 +143,11 @@ onMounted(() => {
                 :class="{ 'font-bold': opt.value === navItem }"
                 asChild
               >
-                <RouterLink :to="opt.value" @click="setNavItem(opt.value)">
+                <RouterLink
+                  :to="opt.value"
+                  @click="setNavItem(opt.value)"
+                  v-if="isPermitted(opt.permission)"
+                >
                   {{ opt.label }}
                 </RouterLink>
               </DropdownMenuItem>

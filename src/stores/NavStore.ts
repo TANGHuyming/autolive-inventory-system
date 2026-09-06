@@ -8,8 +8,9 @@ export const useNavStore = defineStore('nav', () => {
     { value: '/', label: 'Home' },
     { value: '/employees', label: 'Employees', permission: 'admin.super_admin' },
     { value: '/warehouses', label: 'Warehouses', permission: 'admin.super_admin' },
-    { value: '/items', label: 'Items' },
-    { value: '/transactions', label: 'Transactions', permission: 'admin.super_admin' },
+    { value: '/items', label: 'Items', permission: 'admin.super_admin.employee.operator' },
+    { value: '/transactions', label: 'Transactions', permission: 'admin.super_admin.operator' },
+    { value: '/users', label: 'Users', permission: 'super_admin' },
   ])
   const navItem = ref(route.path)
   const navTitles = computed(() => {
