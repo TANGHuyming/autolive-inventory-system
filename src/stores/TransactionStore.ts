@@ -43,6 +43,7 @@ export const useTransactionStore = defineStore('transaction', () => {
       error.value = {
         message: err.message,
       }
+      toast.error('Error!', { description: err.message, position: 'top-center' })
     } finally {
       loading.value = false
     }
@@ -71,6 +72,7 @@ export const useTransactionStore = defineStore('transaction', () => {
       error.value = {
         message: err,
       }
+      toast.error('Error!', { description: err.message, position: 'top-center' })
     } finally {
       loading.value = false
     }
@@ -102,6 +104,7 @@ export const useTransactionStore = defineStore('transaction', () => {
         success: false,
         message: err,
       }
+      toast.error('Error!', { description: err.message, position: 'top-center' })
     } finally {
       loading.value = false
       setTimeout(() => {

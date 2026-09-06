@@ -136,7 +136,7 @@ onMounted(() => {
                 <Menu />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent align="end" class="min-w-[30vw]">
               <DropdownMenuItem
                 v-for="opt in navOptions"
                 :key="opt.value"

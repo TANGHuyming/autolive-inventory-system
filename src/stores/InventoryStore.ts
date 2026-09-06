@@ -44,6 +44,7 @@ export const useInventoryStore = defineStore('inventory', () => {
       error.value = {
         message: err.message,
       }
+      toast.error('Error!', { description: err.message, position: 'top-center' })
     } finally {
       loading.value = false
     }
@@ -68,11 +69,12 @@ export const useInventoryStore = defineStore('inventory', () => {
       }
 
       return data
-    } catch (err) {
+    } catch (err: any) {
       console.error(err)
       error.value = {
         message: err,
       }
+      toast.error('Error!', { description: err.message, position: 'top-center' })
     } finally {
       loading.value = false
     }
@@ -109,6 +111,7 @@ export const useInventoryStore = defineStore('inventory', () => {
         success: false,
         message: err.message,
       }
+      toast.error('Error!', { description: err.message, position: 'top-center' })
     } finally {
       loading.value = false
       setTimeout(() => {

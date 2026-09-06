@@ -38,6 +38,7 @@ export const useWarehouseStore = defineStore('warehouse', () => {
       error.value = {
         message: err.message,
       }
+      toast.error('Error!', { description: err.message, position: 'top-center' })
     } finally {
       loading.value = false
     }
@@ -74,6 +75,7 @@ export const useWarehouseStore = defineStore('warehouse', () => {
         success: false,
         message: err.message,
       }
+      toast.error('Error!', { description: err.message, position: 'top-center' })
     } finally {
       loading.value = false
       setTimeout(() => {
