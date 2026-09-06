@@ -64,11 +64,9 @@ watch(
 )
 
 onMounted(() => {
-  if (!(route.query.page || route.query.limit)) {
-    loadEmployees({
-      ...route.query,
-    })
-  }
+  loadEmployees({
+    ...route.query,
+  })
 })
 </script>
 

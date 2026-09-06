@@ -46,18 +46,6 @@ watch([currentPage, pageSize], () => {
     },
   })
 })
-
-onMounted(() => {
-  if (!(route.query.page || route.query.limit)) {
-    router.replace({
-      query: {
-        ...route.query,
-        page: currentPage.value,
-        limit: pageSize.value,
-      },
-    })
-  }
-})
 </script>
 
 <template>

@@ -337,11 +337,9 @@ watch(
 )
 
 onMounted(() => {
-  if (!(route.query.page || route.query.limit)) {
-    loadItems({
-      ...route.query,
-    })
-  }
+  loadItems({
+    ...route.query,
+  })
 })
 
 onUnmounted(() => {

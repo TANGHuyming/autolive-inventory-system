@@ -277,11 +277,9 @@ watch(
 )
 
 onMounted(() => {
-  if (!(route.query.page || route.query.limit)) {
-    loadTransactions({
-      ...route.query,
-    })
-  }
+  loadTransactions({
+    ...route.query,
+  })
 })
 </script>
 

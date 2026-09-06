@@ -139,11 +139,9 @@ watch(
 )
 
 onMounted(() => {
-  if (!(route.query.page || route.query.limit)) {
-    loadWarehouses({
-      ...route.query,
-    })
-  }
+  loadWarehouses({
+    ...route.query,
+  })
 })
 </script>
 
