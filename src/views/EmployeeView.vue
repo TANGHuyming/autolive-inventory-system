@@ -63,11 +63,11 @@ watch(
   { deep: true },
 )
 
-onMounted(() => {
-  loadEmployees({
-    ...route.query,
-  })
-})
+// onMounted(() => {
+//   loadEmployees({
+//     ...route.query,
+//   })
+// })
 </script>
 
 <template>

@@ -138,11 +138,11 @@ watch(
   { deep: true },
 )
 
-onMounted(() => {
-  loadWarehouses({
-    ...route.query,
-  })
-})
+// onMounted(() => {
+//   loadWarehouses({
+//     ...route.query,
+//   })
+// })
 </script>
 
 <template>

@@ -276,11 +276,11 @@ watch(
   { deep: true },
 )
 
-onMounted(() => {
-  loadTransactions({
-    ...route.query,
-  })
-})
+// onMounted(() => {
+//   loadTransactions({
+//     ...route.query,
+//   })
+// })
 </script>
 
 <template>
