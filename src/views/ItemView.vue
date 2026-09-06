@@ -301,14 +301,14 @@ const toPayload = (items, location) => {
   return formData
 }
 
-const handleSubmitItems = () => {
+const handleSubmitItems = async () => {
   const payload = toPayload(itemsToAssign.value, locationForm.value)
-  bulkCreateItems(payload)
+  await bulkCreateItems(payload)
   if (!error.value) {
     handleResetLocationForm()
     handleResetForm()
     itemsToAssign.value = []
-    fetchItems({}, true) // Fetch up to date items while scout works
+    await fetchItems({}, true) // Fetch up to date items while scout works
   }
 
   showAssignedItems.value = false

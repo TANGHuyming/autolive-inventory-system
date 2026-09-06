@@ -249,7 +249,7 @@ const handleSubmitTransaction = async () => {
   if (!error.value) {
     handleResetLocationForm()
     handleResetBuyerForm()
-    fetchTransactions()
+    await fetchTransactions()
     showAssignedItems.value = false
   }
 }

@@ -133,13 +133,13 @@ const toPayload = (employeeForm) => {
   return formData
 }
 
-const handleSubmitEmployeeForm = () => {
+const handleSubmitEmployeeForm = async () => {
   const payload = toPayload(employeeForm.value)
-  updateEmployee(route.params.employeeId, payload)
+  await updateEmployee(route.params.employeeId, payload)
   if (!error.value) {
     handleRefillEmployeeForm()
     showEmployeeForm.value = false
-    fetchEmployeeDetail(route.params.employeeId, {})
+    await fetchEmployeeDetail(route.params.employeeId, {})
   }
 }
 
