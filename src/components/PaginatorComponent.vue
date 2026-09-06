@@ -8,6 +8,7 @@ import {
   SelectContent,
   SelectItem,
 } from '@/components/ui/select'
+import { ChevronRight, ChevronLeft, ChevronsLeft, ChevronsRight } from '@lucide/vue'
 import { useRoute, useRouter } from 'vue-router'
 
 const props = defineProps({
@@ -49,7 +50,7 @@ watch([currentPage, pageSize], () => {
 </script>
 
 <template>
-  <div class="flex justify-between items-center">
+  <div class="flex flex-col sm:flex-row justify-between items-center gap-y-2">
     <Select v-model="pageSize">
       <SelectTrigger class="cursor-pointer">
         <SelectValue :placeholder="`${pageSize}`" />
@@ -69,17 +70,18 @@ watch([currentPage, pageSize], () => {
 
     <div class="flex gap-2">
       <Button @click="handleFirst" class="cursor-pointer" :disabled="currentPage === 1">
-        First
+        <span class="hidden sm:block">First</span>
+        <ChevronsLeft class="block sm:hidden" />
       </Button>
       <Button @click="handlePrevious" class="cursor-pointer" :disabled="currentPage === 1"
-        >Previous</Button
-      >
+        ><span class="hidden sm:block">Previous</span><ChevronLeft class="block sm:hidden"
+      /></Button>
       <Button @click="handleNext" class="cursor-pointer" :disabled="currentPage === totalPages"
-        >Next</Button
-      >
+        ><span class="hidden sm:block">Next</span><ChevronRight class="block sm:hidden"
+      /></Button>
       <Button @click="handleLast" class="cursor-pointer" :disabled="currentPage === totalPages"
-        >Last</Button
-      >
+        ><span class="hidden sm:block">Last</span><ChevronsRight class="block sm:hidden"
+      /></Button>
     </div>
 
     <p>{{ currentPage }} of {{ totalPages }}</p>

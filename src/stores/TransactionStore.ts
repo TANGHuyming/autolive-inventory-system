@@ -67,7 +67,7 @@ export const useTransactionStore = defineStore('transaction', () => {
       }
 
       return data
-    } catch (err) {
+    } catch (err: any) {
       console.error(err)
       error.value = {
         message: err,
@@ -98,7 +98,7 @@ export const useTransactionStore = defineStore('transaction', () => {
       }
 
       return
-    } catch (err) {
+    } catch (err: any) {
       console.error(err)
       error.value = {
         success: false,
