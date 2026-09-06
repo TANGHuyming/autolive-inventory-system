@@ -336,12 +336,14 @@ watch(
   { deep: true },
 )
 
-// onMounted(() => {
-//   loadItems({
-//     ...route.query,
-//   })
-// })
-//
+onMounted(() => {
+  if (!(route.query.page || route.query.limit)) {
+    loadItems({
+      ...route.query,
+    })
+  }
+})
+
 onUnmounted(() => {
   if (!itemForm.value.itemImage || itemImageUrl.value.length !== 0) {
     URL.revokeObjectURL(itemImageUrl.value)

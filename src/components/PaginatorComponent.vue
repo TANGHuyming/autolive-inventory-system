@@ -48,7 +48,7 @@ watch([currentPage, pageSize], () => {
 })
 
 onMounted(() => {
-  if (!route.query.page || !route.query.limit) {
+  if (!(route.query.page || route.query.limit)) {
     router.replace({
       query: {
         ...route.query,
